@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/llvm-12/**",
+                "/usr/include/llvm-c-12/**",
+                "/usr/include/clang/12/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang-12",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}
