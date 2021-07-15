@@ -1,5 +1,6 @@
 #include "globals.hpp"
 #include "lexer.cpp"
+#include "parser.cpp"
 #include "bridge.cpp"
 
 namespace Baasha {
@@ -47,6 +48,38 @@ namespace Baasha {
 
         std::vector<std::shared_ptr<Token>> tokens = lexer->tokenize();
         lexer->printTokens(tokens);
+
+        auto parser = std::make_unique<Parser>(tokens);
+        // std::cout<<"Parser object created. About to parse\n";
+        std::vector<std::unique_ptr<Stmt>> statements = parser->parse();
+        // std::cout<<"Succesfully parsed\n";
+        CodegenVisitor<void, llvm::Value*> visitor;
+        // std::cout<<"Total number of statements:"<<statements.size()<<"\n";
+        // std::cout<<statements[0]->typeName()<<"\n";
+        // std::cout<<(statements[1]==nullptr)<<"\n";
+        for(auto &statement: statements) {
+                // std::cout<<statement->typeName()<<"\n";
+                statement->accept(visitor);
+        }
+
+        
+
+        // ir_builder->Insert(llvm::ConstantInt::get(llvm::IntegerType::get(*the_context, 64), 42, false));
+        the_module->print(llvm::errs(), nullptr);
+        // if(!the_module->global_empty()) {
+        //     auto i = the_module->global_begin();
+        //     while(i != the_module->global_end()) {
+        //         i->print(llvm::outs());
+        //         std::cout<<"\n";
+        //         i++;
+        //     }
+        // } else {
+        //     std::cout<<"No global variables\n";
+        // }
+
+        // the_module->print(llvm::errs(), nullptr);
+        
+
     }
 }
 

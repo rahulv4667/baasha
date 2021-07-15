@@ -55,6 +55,8 @@ namespace Baasha {
                 va_start(args, format);
                 vfprintf(stderr, format, args);
                 va_end(args);
+                fprintf(stderr, "\n");
+                if(level == LogLevel::CRASH) exit(EXIT_FAILURE);
             }
             
     };

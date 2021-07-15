@@ -15,12 +15,21 @@ DIGIT -> "0"..."9"
 
 ### Syntax Grammar
 ```
-program   -> declaration* EOF
+program   -> statement* EOF
 
-declaration -> varDecl | classDecl | funDecl | statement;
+stmt -> varStmt | classStmt | exprStmt | ifStmt | returnStmt | loopStmt | block;
 
-varDecl  -> VISIBILITY? "var" IDENTIFIER TYPE ("=" expression)? ";"
-            | IDENTIFIER ":=" expression ";" ;
+varStmt -> "var" type? IDENTIFIER ( "=" expression)? ("," type? IDENTIFIER ( "=" expression)?)*
+
+classStmt -> "class" IDENTIFIER "{" classBlock "}"
+classBlock -> ("struct" "{" varStmt* "}")? ("impl" "{" function* "}")
+
+exprStmt -> expression ";"
+
+ifStmt -> "if" expression "{" statement "}" ("else" "{" statement "}")?
+loopStmt -> "loop" expression "{" statement "}"
+
+returnStmt -> "return" expression* ";"
 
 expression -> assignment;
 
@@ -28,6 +37,8 @@ assignment -> IDENTIFIER "=" assignment | logic_or;
 
 logic_or -> logic_and ("or" logic_and)* ;
 logic_and -> equality ("and" equality)
+
+type -> "uint8" | "uint16" | "uint32" | "uint64" | "int8" | "int16" | "int32" | "int64" | "bool";
 ```
 
 ### AST nodes
@@ -35,7 +46,12 @@ logic_and -> equality ("and" equality)
 ```
 Stmt
 varStmt -> Token nameToken, Token typeToken, Expr initializer
-classStmt -> Token nameToken, Token 
+classStmt -> Token nameToken, Stmt superclass, 
+exprStmt -> Expr expression
+ifStmt -> Expr Condition, Stmt thenBlock, Stmt elseBlock
+loopStmt -> Expr condition, Stmt loopBlock
+returnStmt -> Expr returnVal;
+
 
 Expr 
 AssignExpr -> Variable lvalue, Expr rvalue

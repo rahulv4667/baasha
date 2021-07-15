@@ -1,2 +1,5 @@
-var x;
-var y="hello";
+var x int32 = 10;
+var y float32 = 5.45e-12;
+var t = 5.42e+245;
+var z = 0x2a;
+var x = 42;

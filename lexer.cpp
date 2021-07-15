@@ -1,3 +1,5 @@
+#ifndef __BAASHA_LEXER_CPP
+#define __BAASHA_LEXER_CPP
 #include "globals.hpp"
 
 namespace Baasha {
@@ -13,7 +15,7 @@ namespace Baasha {
         // datatypes
         K_INT32, K_INT64, K_INT16, K_INT8,
         K_UINT32, K_UINT64, K_UINT16, K_UINT8,
-        K_FLOAT32, K_FLOAT64, K_BOOL,
+        K_FLOAT32, K_FLOAT64, K_BOOL, OBJECT,
         K_NULL,
 
         K_TRUE, K_FALSE,
@@ -47,6 +49,67 @@ namespace Baasha {
         FILE_EOF
     };
 
+    TokenType keywordEnumVal(std::string kword) {
+        if(kword == "int8") return TokenType::K_INT8;
+        else if(kword == "int16")               return TokenType::K_INT16;
+        else if(kword == "int32")               return TokenType::K_INT32;
+        else if(kword == "int64")               return TokenType::K_INT64;
+        else if(kword == "uint8")               return TokenType::K_UINT8;
+        else if(kword == "uint16")              return TokenType::K_UINT16;
+        else if(kword == "uint32")              return TokenType::K_UINT32;
+        else if(kword == "uint64")              return TokenType::K_UINT64;
+        else if(kword == "float32")             return TokenType::K_FLOAT32;
+        else if(kword == "float64")             return TokenType::K_FLOAT64;
+        else if(kword == "bool")                return TokenType::K_BOOL;
+        else if(kword == "var")                 return TokenType::K_VAR;
+        else if(kword == "class")               return TokenType::K_CLASS;
+        else if(kword == "and")                 return TokenType::K_AND;
+        else if(kword == "or")                  return TokenType::K_OR;
+        else if(kword == "if")                  return TokenType::K_IF;
+        else if(kword == "else")                return TokenType::K_ELSE;
+        else if(kword == "for")                 return TokenType::K_FOR;
+        else                                    return TokenType::TOKEN_ERROR;
+    }
+
+    std::string enumStringVal(TokenType type) {
+        switch(type) {
+            case TokenType::ASTERISK:                   return "ASTERISK";
+            case TokenType::ASTERISK_EQUAL:             return "ASTERISK_EQUAL";
+            case TokenType::BANG:                       return "BANG";
+            case TokenType::BANG_EQUAL:                 return "BANG_EQUAL";
+            case TokenType::BITWISE_AND:                return "BITWISE_AND";
+            case TokenType::BITWISE_AND_EQUAL:          return "BITWISE_AND_EQUAL";
+            case TokenType::BITWISE_OR:                 return "BITWISE_OR";
+            case TokenType::BITWISE_OR_EQUAL:           return "BITWISE_OR_EQUAL";
+            case TokenType::BITWISE_XOR:                return "BITWISE_XOR";
+            case TokenType::BITWISE_XOR_EQUAL:          return "BITWISE_XOR_EQUAL";
+            case TokenType::BRACKET_CLOSE:              return "BRACKET_CLOSE";
+            case TokenType::BRACKET_OPEN:               return "BRACKET_OPEN";
+            case TokenType::CURLY_CLOSE:                return "CURLY_CLOSE";
+            case TokenType::CURLY_OPEN:                 return "CURLY_OPEN";
+            case TokenType::DOLLAR:                     return "DOLLAR";
+            case TokenType::EQUAL:                      return "EQUAL";
+            case TokenType::EQUAL_EQUAL:                return "EQUAL_EQUAL";
+            case TokenType::FILE_EOF:                   return "FILE_EOF";
+            case TokenType::FLOAT_LITERAL:              return "FLOAT_LITERAL";
+            case TokenType::GREAT_EQUAL:                return "GREAT_EQUAL";
+            case TokenType::GREAT_THAN:                 return "GREAT_THAN";
+            case TokenType::HASH:                       return "HASH";
+            case TokenType::HEX_LITERAL:                return "HEX_LITERAL";
+            case TokenType::IDENTIFIER:                 return "IDENTIFIER";
+            case TokenType::INT_LITERAL:                return "INT_LITERAL";
+            case TokenType::K_AND:                      return "K_AND";
+            case TokenType::K_BOOL:                     return "K_BOOL";
+            case TokenType::K_CLASS:                    return "K_CLASS";
+            case TokenType::K_ELSE:                     return "K_ELSE";
+            case TokenType::K_FALSE:                    return "K_FALSE";
+            case TokenType::K_FLOAT32:                  return "K_FLOAT32";
+            case TokenType::K_FLOAT64:                  return "K_FLOAT64";
+            case TokenType::K_FOR:                      return "K_FOR";
+            default:                                    return "SOMETHING";
+        }
+    }
+
     typedef struct Scanner {
         size_t start;
         size_t current;
@@ -66,23 +129,35 @@ namespace Baasha {
     } Scanner;
     
 
-    typedef struct Token {
+    struct Token {
         TokenType type;
         std::shared_ptr<Scanner> scan_point;
         Token(TokenType type, std::shared_ptr<Scanner> scan_point)
         :   type(type), scan_point(std::move(scan_point))
         {}
 
+        Token(TokenType type)
+        :   type(type), scan_point(std::move(std::make_shared<Scanner>()))
+        {}
+
+        Token(const Token& token)
+        :   type(token.type), scan_point(token.scan_point)
+        {}
+
         std::string getTokenString(const std::string& code) {
             DEBUG_LOG("Scanner.getTokenString visited");
+            // std::cout<<"getTokenString():"<<scan_point->current<<"\t"<<scan_point->start<<"\n";
+            // if(scan_point->current<=scan_point->start || scan_point->current - scan_point->start <= 2) 
+                // return std::string();
             return code.substr(scan_point->start, scan_point->current-scan_point->start);
         }
-    } Token;
+    };
+
+    typedef struct Token Token;
 
     
 
     class Lexer {
-        std::string source_code;
         std::string item;
         std::vector<std::shared_ptr<Token>> tokens;
         Scanner scanner;
@@ -310,8 +385,9 @@ namespace Baasha {
             DEBUG_LOG("scanToken visited");
             skipNonCode();
             scanner.start = scanner.current;
-            if(curr() == '\0')  {
+            if(scanner.current > 0 && curr() == '\0')  {
                 tokens.emplace_back(std::make_shared<Token>(TokenType::FILE_EOF, std::make_shared<Scanner>(scanner)));
+                return;
             }
 
             char c = advance();
@@ -373,16 +449,22 @@ namespace Baasha {
                 while(scanner.current < source_code.length())
                     scanToken();
 
+                tokens.emplace_back(std::make_shared<Token>(TokenType::FILE_EOF, std::make_shared<Scanner>(scanner)));
                 return std::move(tokens);
                 
             }
 
             void printTokens(std::vector<std::shared_ptr<Token>> tokens) {
                 DEBUG_LOG("printTokens visited");
+                int i=0;
                 for(auto &token: tokens) {
-                    std::cout<<token->getTokenString(source_code)<<std::endl;
+                    std::cout<<i<<"\t"<<token->getTokenString(source_code)<<"\t"<<enumStringVal(token->type)<<std::endl;
+                    i++;
                 }
             }
     };
 
 }
+
+
+#endif // __BAASHA_LEXER_CPP
