@@ -17,12 +17,30 @@ DIGIT -> "0"..."9"
 ```
 program   -> statement* EOF
 
-stmt -> varStmt | classStmt | exprStmt | ifStmt | returnStmt | loopStmt | block;
+stmt -> varStmt | funcStmt | classStmt | exprStmt | ifStmt | returnStmt | loopStmt | block;
 
-varStmt -> "var" type? IDENTIFIER ( "=" expression)? ("," type? IDENTIFIER ( "=" expression)?)*
+varStmt -> "var" IDENTIFIER type? ( "=" expression)? ("," IDENTIFIER type? ( "=" expression)?)*
+
+
+funcStmt -> prototype (";" | block) ;
+prototype -> "func" IDENTIFIER "(" parameters? ")" ("->" "(" parameters? ")")? 
+block -> "{" stmt* "}" ;
+returnStmt -> "return" arguments ";"
+
+<!-- funcDefStmt -> "func" IDENTIFIER "(" parameters? ")" ("->" "(" parameters? ")")? block; -->
+<!-- funcDecStmt -> "func" IDENTIFIER "(" parameters? ")" ("->" "(" parameters? ")")? ";"; -->
+
+parameters -> (type parameter ("," parameter )* ) ("," type parameter ("," parameter )* )* ;
+parameter -> IDENTIFIER ("=" expression)?
+arguments -> expression ("," expression)* ;
+
 
 classStmt -> "class" IDENTIFIER "{" classBlock "}"
 classBlock -> ("struct" "{" varStmt* "}")? ("impl" "{" function* "}")
+
+
+
+
 
 exprStmt -> expression ";"
 
@@ -31,14 +49,25 @@ loopStmt -> "loop" expression "{" statement "}"
 
 returnStmt -> "return" expression* ";"
 
+
+
+
 expression -> assignment;
 
-assignment -> IDENTIFIER "=" assignment | logic_or;
+assignment -> ( call "." )? IDENTIFIER "=" assignment | logic_or;
 
 logic_or -> logic_and ("or" logic_and)* ;
-logic_and -> equality ("and" equality)
+logic_and -> equality ("and" equality)* ;
+equality -> comparison (("!=" | "==") comparison)* ;
+comparison -> term ((">" | ">=" | "<" | "<=") term)* ;
+term -> factor (("-" | "+") factor)* ;
+factor -> unary (("/" | "*") unary)* ;
 
-type -> "uint8" | "uint16" | "uint32" | "uint64" | "int8" | "int16" | "int32" | "int64" | "bool";
+unary -> ("!"|"-") unary | call;
+call -> primary ( "(" arguments? ")" | "." IDENTIFIER)* ;
+
+primary -> INTEGER | "true" | "false" | FLOAT | IDENTIFIER ;
+type -> "uint8" | "uint16" | "uint32" | "uint64" | "int8" | "int16" | "int32" | "int64" | "bool" | "float32" | "float64";
 ```
 
 ### AST nodes

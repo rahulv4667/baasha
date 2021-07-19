@@ -23,7 +23,7 @@ namespace Baasha {
         IDENTIFIER,
         
         INT_LITERAL, FLOAT_LITERAL, HEX_LITERAL, OCTAL_LITERAL,
-        STRING_LITERAL, SEMICOLON,
+        STRING_LITERAL, SEMICOLON, COMMA,
 
         // operators
         PLUS, PLUS_EQUAL, 
@@ -72,43 +72,141 @@ namespace Baasha {
     }
 
     std::string enumStringVal(TokenType type) {
+        #define ENUM_STR_VAL(type) case type: return #type
         switch(type) {
-            case TokenType::ASTERISK:                   return "ASTERISK";
-            case TokenType::ASTERISK_EQUAL:             return "ASTERISK_EQUAL";
-            case TokenType::BANG:                       return "BANG";
-            case TokenType::BANG_EQUAL:                 return "BANG_EQUAL";
-            case TokenType::BITWISE_AND:                return "BITWISE_AND";
-            case TokenType::BITWISE_AND_EQUAL:          return "BITWISE_AND_EQUAL";
-            case TokenType::BITWISE_OR:                 return "BITWISE_OR";
-            case TokenType::BITWISE_OR_EQUAL:           return "BITWISE_OR_EQUAL";
-            case TokenType::BITWISE_XOR:                return "BITWISE_XOR";
-            case TokenType::BITWISE_XOR_EQUAL:          return "BITWISE_XOR_EQUAL";
-            case TokenType::BRACKET_CLOSE:              return "BRACKET_CLOSE";
-            case TokenType::BRACKET_OPEN:               return "BRACKET_OPEN";
-            case TokenType::CURLY_CLOSE:                return "CURLY_CLOSE";
-            case TokenType::CURLY_OPEN:                 return "CURLY_OPEN";
-            case TokenType::DOLLAR:                     return "DOLLAR";
-            case TokenType::EQUAL:                      return "EQUAL";
-            case TokenType::EQUAL_EQUAL:                return "EQUAL_EQUAL";
-            case TokenType::FILE_EOF:                   return "FILE_EOF";
-            case TokenType::FLOAT_LITERAL:              return "FLOAT_LITERAL";
-            case TokenType::GREAT_EQUAL:                return "GREAT_EQUAL";
-            case TokenType::GREAT_THAN:                 return "GREAT_THAN";
-            case TokenType::HASH:                       return "HASH";
-            case TokenType::HEX_LITERAL:                return "HEX_LITERAL";
-            case TokenType::IDENTIFIER:                 return "IDENTIFIER";
-            case TokenType::INT_LITERAL:                return "INT_LITERAL";
-            case TokenType::K_AND:                      return "K_AND";
-            case TokenType::K_BOOL:                     return "K_BOOL";
-            case TokenType::K_CLASS:                    return "K_CLASS";
-            case TokenType::K_ELSE:                     return "K_ELSE";
-            case TokenType::K_FALSE:                    return "K_FALSE";
-            case TokenType::K_FLOAT32:                  return "K_FLOAT32";
-            case TokenType::K_FLOAT64:                  return "K_FLOAT64";
-            case TokenType::K_FOR:                      return "K_FOR";
+            ENUM_STR_VAL(TokenType::ASTERISK);
+            ENUM_STR_VAL(TokenType::ASTERISK_EQUAL);
+            ENUM_STR_VAL(TokenType::BANG);
+            ENUM_STR_VAL(TokenType::BANG_EQUAL);
+            ENUM_STR_VAL(TokenType::BITWISE_AND);
+            ENUM_STR_VAL(TokenType::BITWISE_AND_EQUAL);
+            ENUM_STR_VAL(TokenType::BITWISE_OR);
+            ENUM_STR_VAL(TokenType::BITWISE_OR_EQUAL);
+            ENUM_STR_VAL(TokenType::BITWISE_XOR);
+            ENUM_STR_VAL(TokenType::BITWISE_XOR_EQUAL);
+            ENUM_STR_VAL(TokenType::BRACKET_CLOSE);
+            ENUM_STR_VAL(TokenType::BRACKET_OPEN);
+            ENUM_STR_VAL(TokenType::CURLY_CLOSE);
+            ENUM_STR_VAL(TokenType::CURLY_OPEN);
+            ENUM_STR_VAL(TokenType::DOLLAR);
+            ENUM_STR_VAL(TokenType::EQUAL);
+            ENUM_STR_VAL(TokenType::EQUAL_EQUAL);
+            ENUM_STR_VAL(TokenType::FILE_EOF);
+            ENUM_STR_VAL(TokenType::FLOAT_LITERAL);
+            ENUM_STR_VAL(TokenType::GREAT_EQUAL);
+            ENUM_STR_VAL(TokenType::GREAT_THAN);
+            ENUM_STR_VAL(TokenType::HASH);
+            ENUM_STR_VAL(TokenType::HEX_LITERAL);
+            ENUM_STR_VAL(TokenType::IDENTIFIER);
+            ENUM_STR_VAL(TokenType::INT_LITERAL);
+            ENUM_STR_VAL(TokenType::K_AND);
+            ENUM_STR_VAL(TokenType::K_BOOL);
+            ENUM_STR_VAL(TokenType::K_CLASS);
+            ENUM_STR_VAL(TokenType::K_ELSE);
+            ENUM_STR_VAL(TokenType::K_FALSE);
+            ENUM_STR_VAL(TokenType::K_FLOAT32);
+            ENUM_STR_VAL(TokenType::K_FLOAT64);
+            ENUM_STR_VAL(TokenType::K_FOR);
+            ENUM_STR_VAL(TokenType::K_FUNC);
+            ENUM_STR_VAL(TokenType::K_IF);
+            ENUM_STR_VAL(TokenType::K_INT16);
+            ENUM_STR_VAL(TokenType::K_INT32);
+            ENUM_STR_VAL(TokenType::K_INT64);
+            ENUM_STR_VAL(TokenType::K_INT8);
+            ENUM_STR_VAL(TokenType::K_UINT16);
+            ENUM_STR_VAL(TokenType::K_UINT32);
+            ENUM_STR_VAL(TokenType::K_UINT64);
+            ENUM_STR_VAL(TokenType::K_UINT8);
+            ENUM_STR_VAL(TokenType::K_NULL);
+            ENUM_STR_VAL(TokenType::K_OR);
+            ENUM_STR_VAL(TokenType::K_RETURN);
+            ENUM_STR_VAL(TokenType::K_TRUE);
+            ENUM_STR_VAL(TokenType::K_VAR);
+            ENUM_STR_VAL(TokenType::LESS_EQUAL);
+            ENUM_STR_VAL(TokenType::LESS_THAN);
+            ENUM_STR_VAL(TokenType::MINUS);
+            ENUM_STR_VAL(TokenType::MINUS_EQUAL);
+            ENUM_STR_VAL(TokenType::MOD);
+            ENUM_STR_VAL(TokenType::MOD_EQUAL);
+            ENUM_STR_VAL(TokenType::OBJECT);
+            ENUM_STR_VAL(TokenType::OCTAL_LITERAL);
+            ENUM_STR_VAL(TokenType::PLUS);
+            ENUM_STR_VAL(TokenType::PLUS_EQUAL);
+            ENUM_STR_VAL(TokenType::SEMICOLON);
+            ENUM_STR_VAL(TokenType::SLASH);
+            ENUM_STR_VAL(TokenType::SLASH_EQUAL);
+            ENUM_STR_VAL(TokenType::SQUARE_CLOSE);
+            ENUM_STR_VAL(TokenType::SQUARE_OPEN);
+            ENUM_STR_VAL(TokenType::STRING_LITERAL);
+            ENUM_STR_VAL(TokenType::TOKEN_ERROR);
             default:                                    return "SOMETHING";
         }
+        #undef ENUM_STR_VAL
     }
+
+    // std::unique_ptr<llvm::Type> getLLVMType(TokenType type) {
+    //     switch(type) {
+    //         case TokenType::K_UINT8:
+    //         case TokenType::K_INT8:
+    //             return std::make_unique<llvm::IntegerType>(*the_context, 8);
+
+    //         case TokenType::K_INT16:
+    //         case TokenType::K_UINT16:
+    //             return std::make_unique<llvm::IntegerType>(*the_context, 16);
+
+    //         case TokenType::K_UINT32:
+    //         case TokenType::K_INT32:
+    //             return std::make_unique<llvm::IntegerType>(*the_context, 32);
+
+    //         case TokenType::K_INT64:
+    //         case TokenType::K_UINT64:
+    //             return std::make_unique<llvm::IntegerType>(*the_context, 64);
+                    
+    //         case TokenType::K_FLOAT32:
+    //             return std::make_unique<llvm::Type>(*the_context, llvm::Type::TypeID::FloatTyID);
+
+    //         case TokenType::K_FLOAT64:
+    //             return std::make_unique<llvm::Type>(*the_context, llvm::Type::TypeID::DoubleTyID);
+    //     }
+    // }
+
+    llvm::Type* getLLVMTypeRaw(TokenType type) {
+        switch(type) {
+            case TokenType::K_UINT8:
+            case TokenType::K_INT8:
+                return llvm::IntegerType::get(*the_context, 8);
+
+            case TokenType::K_INT16:
+            case TokenType::K_UINT16:
+                return llvm::IntegerType::get(*the_context, 16);
+
+            case TokenType::K_UINT32:
+            case TokenType::K_INT32:
+                return llvm::IntegerType::get(*the_context, 32);
+
+            case TokenType::K_INT64:
+            case TokenType::K_UINT64:
+                return llvm::IntegerType::get(*the_context, 64);
+                    
+            case TokenType::K_FLOAT32:
+                return llvm::Type::getFloatTy(*the_context);
+
+            case TokenType::K_FLOAT64:
+                return llvm::Type::getDoubleTy(*the_context);
+        }
+    }
+
+    llvm::AllocaInst* createEntryBlockAlloca(llvm::Function *func, llvm::Type* type, const std::string& var_name="") {
+        llvm::IRBuilder<> tempB(&(func->getEntryBlock()), func->getEntryBlock().begin());
+        if(var_name.size() > 0)     tempB.CreateAlloca(type, nullptr, var_name);
+        return tempB.CreateAlloca(type/*, nullptr, var_name*/);
+    }
+
+    // llvm::AllocaInst* createEntryBlockAlloca(llvm::Function *func, llvm::Type* type/*, const llvm::Twine& var_name*/) {
+    //     llvm::IRBuilder<> tempB(&(func->getEntryBlock()), func->getEntryBlock().begin());
+    //     return tempB.CreateAlloca(type/*, nullptr, var_name*/);
+    // }
+
 
     typedef struct Scanner {
         size_t start;
@@ -418,6 +516,7 @@ namespace Baasha {
                 case '$':   APPEND_TYPE(TokenType::DOLLAR);
                 case '#':   APPEND_TYPE(TokenType::HASH);
                 case ';':   APPEND_TYPE(TokenType::SEMICOLON);
+                case ',':   APPEND_TYPE(TokenType::COMMA);
                 case '"':   return string();
                 return;
             }

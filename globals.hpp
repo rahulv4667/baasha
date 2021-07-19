@@ -16,6 +16,7 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/GlobalValue.h>
 #include <llvm/IR/GlobalVariable.h>
+#include <llvm/IR/Argument.h>
 
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetSelect.h>
@@ -32,31 +33,13 @@
 #include <string>
 #include <memory>
 #include <exception>
+#include <functional>
 // #include <variant>
 
 #include "BaashaJIT.hpp"
 #include "Logger.hpp"
 
 namespace Baasha {
-
-// typedef union Value {
-//     uint32_t    uint32;
-//     uint64_t    uint64;
-//     uint16_t    uint16;
-//     uint8_t     uint8;
-//     int32_t     int32;
-//     int64_t     int64;
-//     int16_t     int16;
-//     int8_t      int8;
-//     float       float32;
-//     double      float64;
-//     void*       ptr; 
-// } Value;
-
-
-// typedef std::variant<uint8_t, uint16_t, uint32_t, uint64_t, 
-//     int8_t, int16_t, int32_t, int64_t, float, double, std::unique_ptr<std::string>> Value;
-
     
 std::unique_ptr<llvm::LLVMContext> the_context;
 std::unique_ptr<llvm::Module> the_module;
@@ -70,6 +53,7 @@ std::unique_ptr<llvm::DIBuilder> dbg_builder;
 
 std::shared_ptr<Logger> logger = Logger::getInstance();
 std::map<std::string, llvm::Value*> named_values;
+std::map<std::string, llvm::Function*> function_protos;
 
 std::string source_code;
 
@@ -80,6 +64,8 @@ enum class Scope {
     FUNCTION,
     CLASS_SCOPE
 };
+
+Scope scope = Scope::GLOBAL;
 
 // #define DEBUG
 

@@ -135,17 +135,23 @@ class Stmt {
         class ExprStmt;
         class IfStmt;
         class LoopStmt;
+        class PrototypeStmt;
+        class FunctionStmt;
+        class BlockStmt;
         class ReturnStmt;
 
         template<class T=void>
         class Visitor {
             public:
-            virtual T visit(const Stmt&)        = 0;
-            virtual T visit(const VarStmt&)     = 0;
-            virtual T visit(const ExprStmt&)    = 0;
-            virtual T visit(const IfStmt&)      = 0;
-            virtual T visit(const LoopStmt&)    = 0;
-            virtual T visit(const ReturnStmt&)  = 0;
+            virtual T visit(const Stmt&)            = 0;
+            virtual T visit(const VarStmt&)         = 0;
+            virtual T visit(const ExprStmt&)        = 0;
+            virtual T visit(const IfStmt&)          = 0;
+            virtual T visit(const LoopStmt&)        = 0;
+            virtual T visit(const PrototypeStmt&)   = 0;
+            virtual T visit(const FunctionStmt&)    = 0;
+            virtual T visit(const BlockStmt&)       = 0;
+            virtual T visit(const ReturnStmt&)      = 0;
         };
 
         virtual ~Stmt() {}
@@ -228,11 +234,68 @@ class Stmt::LoopStmt : public Stmt {
     std::string typeName() const override { return "LoopStmt"; }
 };
 
+class Stmt::PrototypeStmt : public Stmt {
+    public:
+    std::string name;
+    bool isDecl;
+    std::map<std::string, llvm::Type*> params;
+    std::vector<TokenType> returnTypes;
+
+    PrototypeStmt(
+        const std::string& name, 
+        std::map<std::string, llvm::Type*> params, 
+        std::vector<TokenType> returnTypes, 
+        bool isDecl
+    ) 
+    :   name(std::move(name)), params(std::move(params)), returnTypes(std::move(returnTypes)), isDecl(isDecl)
+    {}
+
+    template<class T>
+    T accept(Visitor<T>& visitor) const {
+        return visitor.visit(*this);
+    } 
+
+    std::string typeName() const override { return "PrototypeStmt"; }
+};
+
+class Stmt::FunctionStmt : public Stmt {
+    public:
+    std::unique_ptr<Stmt::PrototypeStmt> prototype;
+    std::unique_ptr<Stmt::BlockStmt> body;
+
+    FunctionStmt(std::unique_ptr<Stmt::PrototypeStmt> prototype, std::unique_ptr<Stmt::BlockStmt> body)
+    :  prototype(std::move(prototype)), body(std::move(body))
+    {}
+
+    template<class T>
+    T accept(Visitor<T>& visitor) const {
+        return visitor.visit(*this);
+    } 
+
+    std::string typeName() const override { return "FunctionStmt"; }
+};
+
+class Stmt::BlockStmt : public Stmt {
+    public: 
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    BlockStmt(std::vector<std::unique_ptr<Stmt>> statements)
+    :   statements(std::move(statements))
+    {}
+
+    template<class T>
+    T accept(Visitor<T>& visitor) const {
+        return visitor.visit(*this);
+    }
+
+    std::string typeName() const override { return "BlockStmt"; }
+};
+
 class Stmt::ReturnStmt : public Stmt {
     public:
-    std::unique_ptr<Expr> retExpr;
+    std::vector<std::unique_ptr<Expr>> retExpr;
 
-    ReturnStmt(std::unique_ptr<Expr> retExpr)
+    ReturnStmt(std::vector<std::unique_ptr<Expr>> retExpr)
     :   retExpr(std::move(retExpr))
     {}
 
@@ -264,6 +327,8 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             return this->visit(static_cast<const Stmt::ReturnStmt&>(stmt));
         } else if(stmt.typeName() == "ExprStmt") {
             return this->visit(static_cast<const Stmt::ExprStmt&>(stmt));
+        } else if(stmt.typeName() == "FunctionStmt") {
+            return this->visit(static_cast<const Stmt::FunctionStmt&>(stmt));
         } else {
             return StmtRetType();
         }
@@ -274,6 +339,21 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
         llvm::Value* value = (llvm::Constant*)nullptr;
         if(stmt.initializer != nullptr) {
             value = (llvm::Value*)stmt.initializer->accept(*this);
+        }
+
+        if(scope == Scope::FUNCTION) {
+            llvm::AllocaInst* alloca;
+            if(!stmt.type.empty()) {
+                TokenType type = keywordEnumVal(stmt.type);
+                alloca = createEntryBlockAlloca(
+                    ir_builder->GetInsertBlock()->getParent(),
+                    getLLVMTypeRaw(type),
+                    stmt.name
+                );
+
+                named_values[stmt.name] = alloca;
+                return StmtRetType();
+            }
         }
 
         llvm::GlobalVariable *gl_var = nullptr;
@@ -343,6 +423,7 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             switch(value->getType()->getTypeID()) {
                 case llvm::Type::TypeID::IntegerTyID:
                     // std::cout<<"Initializer is int\n";
+                    // llvm::Type* intTy = llvm::TypeBuilder
                     the_module->getOrInsertGlobal(stmt.name, ir_builder->getInt64Ty());
                     gl_var = the_module->getNamedGlobal(stmt.name);
                     if(value != nullptr) gl_var->setInitializer((llvm::Constant*)value);
@@ -368,10 +449,128 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
 
             named_values[stmt.name] = gl_var;
         }
+        
+    }
+
+    StmtRetType visit(const Stmt::PrototypeStmt& stmt) override {
+        // TODO: change to support non-primitive types
+        llvm::Type* retType;
+        // Assign the correct type
+        std::vector<llvm::Type*> retElems;
+        for(auto type : stmt.returnTypes) {
+            retElems.emplace_back(getLLVMTypeRaw(type));
+        }
+        retType = llvm::StructType::get(*the_context, retElems, false);
+
+        std::vector<llvm::Type*> args;
+        // fill up the args with types
+        for(auto arg_itr=stmt.params.begin(); arg_itr != stmt.params.end(); arg_itr++) {
+            args.push_back((*arg_itr).second);
+        }
+
+        llvm::Function* func = llvm::Function::Create(
+            llvm::FunctionType::get(retType, args, false /* isVarArg -- change when supporting varargs */),
+            llvm::Function::LinkageTypes::CommonLinkage,
+            stmt.name,
+            the_module.get()
+        );
+
+        // setting names for parameters
+        auto itr = stmt.params.begin();
+        for(auto &arg: func->args()) {
+            arg.setName((*itr).first);
+            itr++;
+        }
+    }
+
+    StmtRetType visit(const Stmt::FunctionStmt& stmt) override {
+        auto *func = the_module->getFunction(stmt.prototype->name);
+        if(func == nullptr) {
+            this->visit(*stmt.prototype);
+            func = the_module->getFunction(stmt.prototype->name);
+        }
+
+        if(stmt.body == nullptr || stmt.prototype->isDecl) {
+            return StmtRetType();
+        } else {
+            llvm::BasicBlock *func_block = llvm::BasicBlock::Create(*the_context, "entry", func);
+            ir_builder->SetInsertPoint(func_block);
+
+            scope = Scope::FUNCTION;
+            auto old_values = named_values;
+
+            // updating named values. skipping it for now.
+            for(uint32_t i=0; i<func->arg_size(); i++) {
+                llvm::Argument* arg = func->getArg(i);
+                if(!arg->hasName()) {
+                    logger->logMessage(LogLevel::WARNING, "Function argument not having a name");
+                    continue;
+                }
+                named_values[std::string(arg->getName().data())] = arg;
+            }
+
+            // going into generation of body
+            this->visit(*stmt.body);
+
+            // setting default return type
+            // ir_builder->CreateRet(llvm::Value::get)
+
+            llvm::verifyFunction(*func);
+
+            named_values = old_values;
+        }
+
+    }
+
+    StmtRetType visit(const Stmt::BlockStmt& stmt) override {
+        for(uint32_t i=0; i<stmt.statements.size(); i++) {
+            stmt.statements[i]->accept(*this);
+        }
+    }
+
+    StmtRetType visit(const Stmt::ReturnStmt& stmt) override {
+        llvm::StructType* ret_type = (llvm::StructType*)ir_builder->GetInsertBlock()->getParent()->getReturnType();
+        // llvm::Twine ret_name = llvm::Twine(ir_builder->GetInsertBlock()->getParent()->getName()) + "$return";
+        llvm::AllocaInst* ret_value = createEntryBlockAlloca(ir_builder->GetInsertBlock()->getParent(), ret_type);
+        std::cout<<"ReturnSTMT info:\n";
+        // std::string s = std::string(ret_type->getStructName().data());
+        // std::cout<<"Structure name:"<<s<<"\n";
+        uint32_t num = ret_type->getStructNumElements();
+        std::cout<<"Structure num of elements:"<<num<<"\n";
+        for(uint32_t i=0; i<num; i++) {
+            std::cout<<i<<"th element:";
+            std::string type_str;
+            llvm::raw_string_ostream rso(type_str);
+            ret_type->getStructElementType(i)->print(rso, true);
+            std::cout<<rso.str()<<"\n";
+        }
+
+        
+        //  {llvm::APInt(32, 0, false),}
+        for(uint32_t i=0; i < stmt.retExpr.size(); i++) {
+
+            std::vector<llvm::Value*> idx_list;
+            idx_list.push_back(llvm::ConstantInt::get(*the_context, llvm::APInt(32, 0, false)));
+            idx_list.push_back(llvm::ConstantInt::get(*the_context, llvm::APInt(32, i, false)));
+
+            // first, evaluate each expression. then assign its result to return sturct at appropriate index.
+            llvm::Value *expr_res = stmt.retExpr[i]->accept(*this);
+            std::cout<<"Getting "<<i<<"th element in return structure\n";
+            llvm::Value *struct_idx = ir_builder->CreateGEP(ret_type, ret_value, idx_list);
+            std::cout<<"Got "<<i<<"th element in return structure. Storing now\n";
+            ir_builder->CreateStore(expr_res, struct_idx);
+            std::cout<<"Stored in "<<i<<"th element in return structure\n";
+        }
+
+        ir_builder->CreateRet(ret_value);
     }
 
     StmtRetType visit(const Stmt::ExprStmt& stmt)  override {
-        return StmtRetType();
+        if(stmt.expression == nullptr) 
+            return StmtRetType();
+        else {
+            stmt.expression->accept(*this);
+        }
     }
 
     StmtRetType visit(const Stmt::IfStmt& stmt)  override {
@@ -379,10 +578,6 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
     }
 
     StmtRetType visit(const Stmt::LoopStmt& stmt)  override {
-        return StmtRetType();
-    }
-
-    StmtRetType visit(const Stmt::ReturnStmt& stmt)  override {
         return StmtRetType();
     }
 
@@ -407,7 +602,20 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
     }
 
     ExprRetType visit(const Expr::AssignExpr& expr)  override {
-        return ExprRetType();
+        if(named_values.count(expr.name->getTokenString(source_code)) <= 0) {
+            logger->logMessage(LogLevel::ERROR, "Can't assign to variable that doesn't exist");
+            return ExprRetType();
+        } 
+
+        llvm::Value* var = named_values[expr.name->getTokenString(source_code)];
+        llvm::Value* evalutated_value = expr.value->accept(*this); 
+        if(var->getType()->isFunctionTy()) {
+            // std::cout<<"it is function type\n";
+            return ir_builder->CreateStore(evalutated_value, var);
+        } else {
+            // std::cout<<"it is local variable\n";
+            return ir_builder->CreateStore(evalutated_value, var);
+        }
     } 
 
     ExprRetType visit(const Expr::UnaryExpr& expr)  override {
@@ -415,6 +623,47 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
     }
 
     ExprRetType visit(const Expr::BinaryExpr& expr)  override {
+        std::cout<<"Visited binary expr:"<<enumStringVal(expr.oprtr->type)<<"\n";
+        switch(expr.oprtr->type) {
+            case TokenType::PLUS: {
+                    llvm::Value* lhs = expr.left->accept(*this);
+                    llvm::Value* rhs = expr.right->accept(*this);
+                    if(lhs->getType()->getTypeID() == rhs->getType()->getTypeID()) {
+                        std::cout<<"Types are equal\n";
+                    } else  {
+                        std::cout<<"Types are NOT equal\n";
+                    }
+                    return ir_builder->CreateAdd(lhs, rhs);
+            }
+
+            case TokenType::MINUS: {
+                    llvm::Value* lhs = expr.left->accept(*this);
+                    llvm::Value* rhs = expr.right->accept(*this);
+                    return ir_builder->CreateSub(lhs, rhs);
+            }
+            
+            case TokenType::ASTERISK: {
+                    llvm::Value* lhs = expr.left->accept(*this);
+                    llvm::Value* rhs = expr.right->accept(*this);
+                    return ir_builder->CreateMul(lhs, rhs);
+            }
+
+            case TokenType::SLASH: {
+                    llvm::Value* lhs = expr.left->accept(*this);
+                    llvm::Value* rhs = expr.right->accept(*this);
+                    
+                    if(lhs->getType()->getTypeID() == llvm::Type::TypeID::IntegerTyID 
+                        && rhs->getType()->getTypeID() == lhs->getType()->getTypeID())
+                        return ir_builder->CreateUDiv(lhs, rhs);
+
+                    if(lhs->getType()->getTypeID() == llvm::Type::TypeID::FloatTyID 
+                        && rhs->getType()->getTypeID() == lhs->getType()->getTypeID())
+                        return ir_builder->CreateFDiv(lhs, rhs);
+
+            }
+
+                    
+        }
         return ExprRetType();
     }
 
@@ -437,6 +686,15 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             case TokenType::FLOAT_LITERAL: {
                 double float64 = strtod(literal_str.c_str(), NULL);
                 return llvm::ConstantFP::get(*the_context, llvm::APFloat(float64));
+            }
+            case TokenType::IDENTIFIER: {
+                auto var_name = expr.token->getTokenString(source_code);
+                if(named_values.count(var_name) > 0) 
+                    return named_values[expr.token->getTokenString(source_code)];
+                else {
+                    logger->logMessage(LogLevel::WARNING, "Trying to access undeclared variable "+var_name);
+                    return ExprRetType();
+                }
             }
             default: return llvm::ConstantFP::get(*the_context, llvm::APFloat(0.0f));
         }

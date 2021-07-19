@@ -62,22 +62,22 @@ namespace Baasha {
                 statement->accept(visitor);
         }
 
-        
-
-        // ir_builder->Insert(llvm::ConstantInt::get(llvm::IntegerType::get(*the_context, 64), 42, false));
+        std::cout<<"Before function insertion:\n";
         the_module->print(llvm::errs(), nullptr);
-        // if(!the_module->global_empty()) {
-        //     auto i = the_module->global_begin();
-        //     while(i != the_module->global_end()) {
-        //         i->print(llvm::outs());
-        //         std::cout<<"\n";
-        //         i++;
-        //     }
-        // } else {
-        //     std::cout<<"No global variables\n";
-        // }
+        std::cout<<"\n====================================================================\n";
 
-        // the_module->print(llvm::errs(), nullptr);
+        auto *fnType = llvm::FunctionType::get(llvm::Type::getVoidTy(*the_context), false);
+        auto *fn = llvm::Function::Create(fnType, llvm::GlobalValue::LinkageTypes::ExternalWeakLinkage, "main", *the_module);
+        auto *entry = llvm::BasicBlock::Create(*the_context, "entry", fn);
+        ir_builder->SetInsertPoint(entry);
+
+        llvm::Constant *gl_var = the_module->getOrInsertGlobal("x", ir_builder->getInt32Ty());
+        llvm::LoadInst* load = ir_builder->CreateLoad(gl_var);
+        llvm::Value* inc = ir_builder->CreateAdd(ir_builder->getInt32(1), load);
+        llvm::StoreInst* store = ir_builder->CreateStore(inc, gl_var);
+
+        std::cout<<"\n=====================================================================\n";
+        the_module->print(llvm::outs(), nullptr);
         
 
     }
