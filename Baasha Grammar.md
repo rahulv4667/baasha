@@ -1,5 +1,9 @@
 ## Baasha Grammar
 
+
+// TODO
+--- change returntypes from struct to some other thing.
+--- add resolution for structure names.
 <!--
 Borrowed from Lox and Golang
 -->
@@ -17,7 +21,7 @@ DIGIT -> "0"..."9"
 ```
 program   -> statement* EOF
 
-stmt -> varStmt | funcStmt | classStmt | exprStmt | ifStmt | returnStmt | loopStmt | block;
+stmt -> varStmt | funcStmt | structStmt | implStmt | exprStmt | ifStmt | returnStmt | loopStmt | block;
 
 varStmt -> "var" IDENTIFIER type? ( "=" expression)? ("," IDENTIFIER type? ( "=" expression)?)*
 
@@ -35,11 +39,10 @@ parameter -> IDENTIFIER ("=" expression)?
 arguments -> expression ("," expression)* ;
 
 
-classStmt -> "class" IDENTIFIER "{" classBlock "}"
-classBlock -> ("struct" "{" varStmt* "}")? ("impl" "{" function* "}")
+structStmt -> "struct" IDENTIFIER "{" varStmt* "}" 
 
 
-
+implStmt -> "impl" IDENTIFIER "{" (prototype block)* "}"
 
 
 exprStmt -> expression ";"

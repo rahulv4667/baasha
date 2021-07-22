@@ -9,13 +9,13 @@ namespace Baasha {
         TOKEN_ERROR,
 
         // keywords
-        K_VAR, K_CLASS, K_FUNC, K_OR, K_AND, K_IF, K_ELSE, K_FOR,
-        K_RETURN,
+        K_VAR, K_STRUCT, K_IMPL, K_FUNC, K_OR, K_AND, K_IF, K_ELSE, K_FOR,
+        K_RETURN,/* K_SELF,*/
 
         // datatypes
         K_INT32, K_INT64, K_INT16, K_INT8,
         K_UINT32, K_UINT64, K_UINT16, K_UINT8,
-        K_FLOAT32, K_FLOAT64, K_BOOL, OBJECT,
+        K_FLOAT32, K_FLOAT64, K_BOOL, OBJECT_TYPE,
         K_NULL,
 
         K_TRUE, K_FALSE,
@@ -62,13 +62,14 @@ namespace Baasha {
         else if(kword == "float64")             return TokenType::K_FLOAT64;
         else if(kword == "bool")                return TokenType::K_BOOL;
         else if(kword == "var")                 return TokenType::K_VAR;
-        else if(kword == "class")               return TokenType::K_CLASS;
+        else if(kword == "struct")              return TokenType::K_STRUCT;
+        // else if(kword == "self")                return TokenType::K_SELF;
         else if(kword == "and")                 return TokenType::K_AND;
         else if(kword == "or")                  return TokenType::K_OR;
         else if(kword == "if")                  return TokenType::K_IF;
         else if(kword == "else")                return TokenType::K_ELSE;
         else if(kword == "for")                 return TokenType::K_FOR;
-        else                                    return TokenType::TOKEN_ERROR;
+        else                                    return TokenType::OBJECT_TYPE;  // not keyword but helpful for sturct types.
     }
 
     std::string enumStringVal(TokenType type) {
@@ -101,7 +102,6 @@ namespace Baasha {
             ENUM_STR_VAL(TokenType::INT_LITERAL);
             ENUM_STR_VAL(TokenType::K_AND);
             ENUM_STR_VAL(TokenType::K_BOOL);
-            ENUM_STR_VAL(TokenType::K_CLASS);
             ENUM_STR_VAL(TokenType::K_ELSE);
             ENUM_STR_VAL(TokenType::K_FALSE);
             ENUM_STR_VAL(TokenType::K_FLOAT32);
@@ -109,6 +109,7 @@ namespace Baasha {
             ENUM_STR_VAL(TokenType::K_FOR);
             ENUM_STR_VAL(TokenType::K_FUNC);
             ENUM_STR_VAL(TokenType::K_IF);
+            ENUM_STR_VAL(TokenType::K_IMPL);
             ENUM_STR_VAL(TokenType::K_INT16);
             ENUM_STR_VAL(TokenType::K_INT32);
             ENUM_STR_VAL(TokenType::K_INT64);
@@ -120,6 +121,8 @@ namespace Baasha {
             ENUM_STR_VAL(TokenType::K_NULL);
             ENUM_STR_VAL(TokenType::K_OR);
             ENUM_STR_VAL(TokenType::K_RETURN);
+            // ENUM_STR_VAL(TokenType::K_SELF);
+            ENUM_STR_VAL(TokenType::K_STRUCT);
             ENUM_STR_VAL(TokenType::K_TRUE);
             ENUM_STR_VAL(TokenType::K_VAR);
             ENUM_STR_VAL(TokenType::LESS_EQUAL);
@@ -128,7 +131,7 @@ namespace Baasha {
             ENUM_STR_VAL(TokenType::MINUS_EQUAL);
             ENUM_STR_VAL(TokenType::MOD);
             ENUM_STR_VAL(TokenType::MOD_EQUAL);
-            ENUM_STR_VAL(TokenType::OBJECT);
+            ENUM_STR_VAL(TokenType::OBJECT_TYPE);
             ENUM_STR_VAL(TokenType::OCTAL_LITERAL);
             ENUM_STR_VAL(TokenType::PLUS);
             ENUM_STR_VAL(TokenType::PLUS_EQUAL);
@@ -144,33 +147,7 @@ namespace Baasha {
         #undef ENUM_STR_VAL
     }
 
-    // std::unique_ptr<llvm::Type> getLLVMType(TokenType type) {
-    //     switch(type) {
-    //         case TokenType::K_UINT8:
-    //         case TokenType::K_INT8:
-    //             return std::make_unique<llvm::IntegerType>(*the_context, 8);
-
-    //         case TokenType::K_INT16:
-    //         case TokenType::K_UINT16:
-    //             return std::make_unique<llvm::IntegerType>(*the_context, 16);
-
-    //         case TokenType::K_UINT32:
-    //         case TokenType::K_INT32:
-    //             return std::make_unique<llvm::IntegerType>(*the_context, 32);
-
-    //         case TokenType::K_INT64:
-    //         case TokenType::K_UINT64:
-    //             return std::make_unique<llvm::IntegerType>(*the_context, 64);
-                    
-    //         case TokenType::K_FLOAT32:
-    //             return std::make_unique<llvm::Type>(*the_context, llvm::Type::TypeID::FloatTyID);
-
-    //         case TokenType::K_FLOAT64:
-    //             return std::make_unique<llvm::Type>(*the_context, llvm::Type::TypeID::DoubleTyID);
-    //     }
-    // }
-
-    llvm::Type* getLLVMTypeRaw(TokenType type) {
+    llvm::Type* getLLVMTypeRaw(TokenType type, const std::string& type_str = "") {
         switch(type) {
             case TokenType::K_UINT8:
             case TokenType::K_INT8:
@@ -193,19 +170,10 @@ namespace Baasha {
 
             case TokenType::K_FLOAT64:
                 return llvm::Type::getDoubleTy(*the_context);
+            case TokenType::OBJECT_TYPE:
+                return getStructure(type_str);
         }
     }
-
-    llvm::AllocaInst* createEntryBlockAlloca(llvm::Function *func, llvm::Type* type, const std::string& var_name="") {
-        llvm::IRBuilder<> tempB(&(func->getEntryBlock()), func->getEntryBlock().begin());
-        if(var_name.size() > 0)     tempB.CreateAlloca(type, nullptr, var_name);
-        return tempB.CreateAlloca(type/*, nullptr, var_name*/);
-    }
-
-    // llvm::AllocaInst* createEntryBlockAlloca(llvm::Function *func, llvm::Type* type/*, const llvm::Twine& var_name*/) {
-    //     llvm::IRBuilder<> tempB(&(func->getEntryBlock()), func->getEntryBlock().begin());
-    //     return tempB.CreateAlloca(type/*, nullptr, var_name*/);
-    // }
 
 
     typedef struct Scanner {
@@ -441,7 +409,6 @@ namespace Baasha {
             switch(source_code[scanner.start]) {
                 case 'a': APPEND_IF_MATCH(TokenType::K_AND, std::string("and"));
                 case 'b': APPEND_IF_MATCH(TokenType::K_BOOL, std::string("bool"));
-                case 'c': APPEND_IF_MATCH(TokenType::K_CLASS, std::string("class"));
                 case 'e': APPEND_IF_MATCH(TokenType::K_ELSE, std::string("else"));
                 case 'f': 
                         APPEND_IF_MATCH(TokenType::K_FOR, std::string("for"));
@@ -451,6 +418,7 @@ namespace Baasha {
                         APPEND_IF_MATCH(TokenType::K_FLOAT64, std::string("float64"));
                 case 'i':
                         APPEND_IF_MATCH(TokenType::K_IF, std::string("if"));
+                        APPEND_IF_MATCH(TokenType::K_IMPL, std::string("impl"));
                         APPEND_IF_MATCH(TokenType::K_INT8, std::string("int8"));
                         APPEND_IF_MATCH(TokenType::K_INT16, std::string("int16"));
                         APPEND_IF_MATCH(TokenType::K_INT32, std::string("int32"));
@@ -462,6 +430,9 @@ namespace Baasha {
                         APPEND_IF_MATCH(TokenType::K_OR, std::string("or"));
                 case 'r':
                         APPEND_IF_MATCH(TokenType::K_RETURN, std::string("return"));
+                case 's':
+                        // APPEND_IF_MATCH(TokenType::K_SELF, std::string("self"));
+                        APPEND_IF_MATCH(TokenType::K_STRUCT, std::string("struct"));
                 case 't':
                         APPEND_IF_MATCH(TokenType::K_TRUE, std::string("true"));
                 case 'u':
@@ -474,9 +445,16 @@ namespace Baasha {
                         
             }
 
+            if(
+                tokens.back()->type == TokenType::K_STRUCT 
+                || tokens.back()->type == TokenType::K_IMPL
+                || tokens.back()->type == TokenType::IDENTIFIER) {
+                tokens.emplace_back(std::make_shared<Token>(TokenType::OBJECT_TYPE, std::make_shared<Scanner>(scanner)));
+                return;
+            }
             tokens.emplace_back(std::make_shared<Token>(TokenType::IDENTIFIER, std::make_shared<Scanner>(scanner)));
 
-            #undef CHECK_AND_APPEND
+            #undef APPEND_IF_MATCH
         }
 
         void scanToken() {

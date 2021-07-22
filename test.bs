@@ -1,14 +1,33 @@
 var x int32 = 10;
 var y int32 = 20;
 
-func func1(int32 a, int32 b) (int32, int32, float32) {
-    var z int32;
-    var y int32;
-    z = a + b;
-    y = a - b;
-    x = a * b;
-    return z, y, x;
+struct Foo {
+    var a int32;
+    var b float32;
 }
+
+impl Foo {
+    func print() () {
+        a;
+        b;
+    }
+}
+
+//var f Foo;
+
+func func1() () {
+    var f Foo;
+}
+
+
+//func func1(int32 a, int32 b) (int32, int32, float32) {
+//    var z int32;
+//    var y int32;
+//    z = a + b;
+//    y = a - b;
+//    x = a * b;
+//    return z, y, x;
+//}
 
 //func func1(int32 a, int32 b) (int32) {
 //    var c int32;

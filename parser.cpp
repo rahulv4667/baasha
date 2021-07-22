@@ -158,7 +158,8 @@ namespace Baasha {
             rules[TokenType::K_FUNC]            = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
             rules[TokenType::K_FLOAT32]         = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
             rules[TokenType::K_FLOAT64]         = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
-            rules[TokenType::K_CLASS]           = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
+            rules[TokenType::K_STRUCT]          = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
+            rules[TokenType::K_IMPL]            = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
             rules[TokenType::K_FOR]             = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
             rules[TokenType::K_NULL]            = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
             rules[TokenType::K_RETURN]          = new ParseRule(NULL,            NULL,       Precedence::PREC_NONE);
@@ -214,7 +215,8 @@ namespace Baasha {
             delete rules[TokenType::K_FUNC];
             delete rules[TokenType::K_FLOAT32];
             delete rules[TokenType::K_FLOAT64];
-            delete rules[TokenType::K_CLASS];
+            delete rules[TokenType::K_STRUCT];
+            delete rules[TokenType::K_IMPL];
             delete rules[TokenType::K_FOR];
             delete rules[TokenType::K_NULL];
             delete rules[TokenType::K_RETURN];
@@ -314,9 +316,11 @@ namespace Baasha {
 
         std::unique_ptr<Stmt> statement() {
             std::cout<<"Statement: "<<enumStringVal(peek()->type)<<"\n";
-            if(match(TokenType::K_VAR)) return varStmt();
-            else if(match(TokenType::K_FUNC)) return funcStmt();
-            else if(match(TokenType::K_RETURN)) return returnStmt();
+            if(match(TokenType::K_VAR))                 return varStmt();
+            else if(match(TokenType::K_FUNC))           return funcStmt();
+            else if(match(TokenType::K_RETURN))         return returnStmt();
+            else if(match(TokenType::K_STRUCT))         return structStmt();
+            else if(match(TokenType::K_IMPL))           return implStmt();
             else if(match(TokenType::SEMICOLON)) {
                 return nullptr;
             }
@@ -329,6 +333,69 @@ namespace Baasha {
             scanner.current++;
             return nullptr;       
         }
+
+
+        std::unique_ptr<Stmt::StructStmt> structStmt() {
+            std::unique_ptr<Token> name;
+            std::vector<std::unique_ptr<Stmt::VarStmt>> members;
+
+            name = consume(TokenType::OBJECT_TYPE, "Expected identifier after 'struct' keyword", true);
+            
+            consume(TokenType::CURLY_OPEN, "Expected '{' after identifier for struct", true);
+
+            // Scope prev_scope = scope;
+            // scope = Scope::STRUCT;
+
+            while(!match(TokenType::CURLY_CLOSE)) {
+
+                if(match(TokenType::K_VAR)) {
+                    std::unique_ptr<Stmt::VarStmt> var = varStmt(true);
+                    if(var != nullptr)
+                        members.emplace_back(std::move(var));
+                }
+                else if(match(TokenType::SEMICOLON)) continue; // required so that we go past semicolon
+
+            }
+
+            // scope = prev_scope;
+            return std::make_unique<Stmt::StructStmt>(std::move(name), std::move(members));
+        }
+
+
+        std::unique_ptr<Stmt::ImplStmt> implStmt() {
+            std::unique_ptr<Token> name;
+            std::vector<std::unique_ptr<Stmt::FunctionStmt>> funcs;
+
+            name = consume(TokenType::OBJECT_TYPE, "Expected struct name after 'impl' keyword", true);
+            consume(TokenType::CURLY_OPEN, "Expected '{' after struct name for impl", true);
+
+            std::string struct_name = name->getTokenString(source_code);
+            // Scope prev_scope = scope;
+            // scope = Scope::IMPL;
+
+            // if(user_defined_types.count(struct_name) == 0) {
+            //     llvm::StructType* stype = llvm::StructType::get(*the_context);
+            //     stype->setName(struct_name);
+            //     user_defined_types[struct_name] =  stype;
+            // }
+ 
+            while(!match(TokenType::CURLY_CLOSE)) {
+                if(match(TokenType::K_FUNC)) {
+                    
+                    std::unique_ptr<Stmt::FunctionStmt> func = funcStmt(true);
+                    if(func != nullptr) { 
+                        func->prototype->struct_or_trait_name = struct_name;
+                        funcs.emplace_back(std::move(func));    
+                    }
+                    
+                }
+                // else if(match(TokenType))
+            }
+
+            // scope = prev_scope;
+            return std::make_unique<Stmt::ImplStmt>(std::move(name), std::move(funcs));
+        }
+
 
         std::unique_ptr<Stmt::ReturnStmt> returnStmt() {
             std::vector<std::unique_ptr<Expr>> retExprs;
@@ -349,7 +416,7 @@ namespace Baasha {
             return std::make_unique<Stmt::ReturnStmt>(std::move(retExprs));
         }
 
-        std::unique_ptr<Stmt::FunctionStmt> funcStmt() {
+        std::unique_ptr<Stmt::FunctionStmt> funcStmt(bool is_inside_impl=false) {
 
             // TODO: Right now, it works only for primitive types. find a way to make match for custom types also.
             // TODO: Also handle default values for function parameters.
@@ -365,6 +432,13 @@ namespace Baasha {
 
             // reading parameters list
             std::map<std::string, llvm::Type*> params;
+
+            // if(!struct_or_trait_name.empty()) {
+            //     llvm::StructType* stype = (llvm::StructType*)user_defined_types[struct_or_trait_name];
+            //     llvm::Type* dtype = llvm::PointerType::get(stype, 0);
+            //     params["self"] = dtype;
+            // }
+
             while(!match(TokenType::BRACKET_CLOSE)) {
                 // read parameters
                 
@@ -397,6 +471,11 @@ namespace Baasha {
             
             if(match(TokenType::SEMICOLON)) {
 
+                if(is_inside_impl) {
+                    logger->logMessage(LogLevel::ERROR, "Implementations can't have function declarations. Only definitions allowed");
+                    return nullptr;
+                }
+
                 std::unique_ptr<Stmt::PrototypeStmt> proto =
                         std::make_unique<Stmt::PrototypeStmt>(name->getTokenString(source_code), params, returns, true);
                 return std::make_unique<Stmt::FunctionStmt>(std::move(proto), nullptr);
@@ -428,20 +507,28 @@ namespace Baasha {
             return std::make_unique<Stmt::BlockStmt>(std::move(stmts));
         }
 
-        std::unique_ptr<Stmt::VarStmt> varStmt() {
+        std::unique_ptr<Stmt::VarStmt> varStmt(bool is_inside_struct=false) {
 
             std::unique_ptr<Token> name = consume(TokenType::IDENTIFIER, "Expected variable name after 'var'");
 
             std::vector<TokenType> datatypes = {
                 TokenType::K_INT32, TokenType::K_INT64, TokenType::K_INT16, TokenType::K_INT8,
                 TokenType::K_UINT32, TokenType::K_UINT64, TokenType::K_UINT16, TokenType::K_UINT8,
-                TokenType::K_FLOAT32, TokenType::K_FLOAT64, TokenType::K_BOOL 
+                TokenType::K_FLOAT32, TokenType::K_FLOAT64, TokenType::K_BOOL, TokenType::OBJECT_TYPE 
             };
 
+            
             std::unique_ptr<Token> datatype = consume(std::move(datatypes), "", false);
+            if(datatype == nullptr && is_inside_struct) {
+                logger->logMessage(LogLevel::ERROR, "Variable declaration in a struct requires datatype");
+                return nullptr;
+            }
             std::unique_ptr<Expr> initializer = nullptr;
 
             if(match(TokenType::EQUAL)) {
+                if(is_inside_struct) {
+                    logger->logMessage(LogLevel::WARNING, "Initialization in struct is illegal. It will be ignored.");
+                }
                 initializer = expression();
             } else if(datatype == nullptr) {
                 // user has neither given datatype nor initializer

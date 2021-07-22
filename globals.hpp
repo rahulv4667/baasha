@@ -54,6 +54,8 @@ std::unique_ptr<llvm::DIBuilder> dbg_builder;
 std::shared_ptr<Logger> logger = Logger::getInstance();
 std::map<std::string, llvm::Value*> named_values;
 std::map<std::string, llvm::Function*> function_protos;
+std::map<std::string, llvm::Type*> user_defined_types;
+// std::string current_impl_name = "";
 
 std::string source_code;
 
@@ -62,10 +64,27 @@ uint32_t TAB_SPACE_COLS = 4;
 enum class Scope {
     GLOBAL,
     FUNCTION,
-    CLASS_SCOPE
+    STRUCT,
+    IMPL,
+    TRAIT
 };
 
 Scope scope = Scope::GLOBAL;
+
+
+llvm::AllocaInst* createEntryBlockAlloca(llvm::Function *func, llvm::Type* type, const std::string& var_name="") {
+    llvm::IRBuilder<> tempB(&(func->getEntryBlock()), func->getEntryBlock().begin());
+    if(var_name.size() > 0)     tempB.CreateAlloca(type, nullptr, var_name);
+    return tempB.CreateAlloca(type/*, nullptr, var_name*/);
+}
+
+llvm::StructType* getStructure(const std::string& name) {
+    if(user_defined_types.count(name) == 0) {
+        llvm::StructType* structure = llvm::StructType::create(*the_context, name);
+        user_defined_types[name] = structure;
+    }
+    return (llvm::StructType*)user_defined_types[name];
+}
 
 // #define DEBUG
 

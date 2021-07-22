@@ -48,6 +48,7 @@ namespace Baasha {
 
         std::vector<std::shared_ptr<Token>> tokens = lexer->tokenize();
         lexer->printTokens(tokens);
+        std::cout<<"============================================================\n";
 
         auto parser = std::make_unique<Parser>(tokens);
         // std::cout<<"Parser object created. About to parse\n";

@@ -139,6 +139,8 @@ class Stmt {
         class FunctionStmt;
         class BlockStmt;
         class ReturnStmt;
+        class StructStmt;
+        class ImplStmt;
 
         template<class T=void>
         class Visitor {
@@ -152,6 +154,8 @@ class Stmt {
             virtual T visit(const FunctionStmt&)    = 0;
             virtual T visit(const BlockStmt&)       = 0;
             virtual T visit(const ReturnStmt&)      = 0;
+            virtual T visit(const StructStmt&)      = 0;
+            virtual T visit(const ImplStmt&)        = 0;
         };
 
         virtual ~Stmt() {}
@@ -237,6 +241,7 @@ class Stmt::LoopStmt : public Stmt {
 class Stmt::PrototypeStmt : public Stmt {
     public:
     std::string name;
+    std::string struct_or_trait_name;
     bool isDecl;
     std::map<std::string, llvm::Type*> params;
     std::vector<TokenType> returnTypes;
@@ -247,7 +252,20 @@ class Stmt::PrototypeStmt : public Stmt {
         std::vector<TokenType> returnTypes, 
         bool isDecl
     ) 
-    :   name(std::move(name)), params(std::move(params)), returnTypes(std::move(returnTypes)), isDecl(isDecl)
+    :   name(std::move(name)), params(std::move(params)), returnTypes(std::move(returnTypes)), isDecl(isDecl),
+        struct_or_trait_name("")
+    {}
+
+    PrototypeStmt(
+        const std::string& name, 
+        const std::string& struct_or_trait_name,
+        std::map<std::string, llvm::Type*> params, 
+        std::vector<TokenType> returnTypes, 
+        bool isDecl
+    ) 
+    :   name(std::move(name)), 
+        struct_or_trait_name(std::move(struct_or_trait_name)),
+        params(std::move(params)), returnTypes(std::move(returnTypes)), isDecl(isDecl)
     {}
 
     template<class T>
@@ -260,6 +278,7 @@ class Stmt::PrototypeStmt : public Stmt {
 
 class Stmt::FunctionStmt : public Stmt {
     public:
+    
     std::unique_ptr<Stmt::PrototypeStmt> prototype;
     std::unique_ptr<Stmt::BlockStmt> body;
 
@@ -308,7 +327,39 @@ class Stmt::ReturnStmt : public Stmt {
 };
 
 
+class Stmt::StructStmt : public Stmt {
+    public:
+    std::unique_ptr<Token> name;
+    std::vector<std::unique_ptr<Stmt::VarStmt>> members;
 
+    StructStmt(std::unique_ptr<Token> name, std::vector<std::unique_ptr<Stmt::VarStmt>> members)
+    :   name(std::move(name)), members(std::move(members))
+    {}
+
+    template<class T>
+    T accept(Visitor<T>& visitor) const {
+        return visitor.visit(*this);
+    }
+
+    std::string typeName() const override { return "StructStmt"; }
+};
+
+class Stmt::ImplStmt : public Stmt {
+    public:
+    std::unique_ptr<Token> name;
+    std::vector<std::unique_ptr<Stmt::FunctionStmt>> mem_funcs;
+
+    ImplStmt(std::unique_ptr<Token> name, std::vector<std::unique_ptr<Stmt::FunctionStmt>> mem_funcs)
+    :   name(std::move(name)), mem_funcs(std::move(mem_funcs))
+    {}
+
+    template<class T>
+    T accept(Visitor<T>& visitor) const {
+        return visitor.visit(*this);
+    }
+
+    std::string typeName() const override { return "ImplStmt"; }
+};
 
 
 template<class StmtRetType=void, class ExprRetType=llvm::Value*>
@@ -329,6 +380,10 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             return this->visit(static_cast<const Stmt::ExprStmt&>(stmt));
         } else if(stmt.typeName() == "FunctionStmt") {
             return this->visit(static_cast<const Stmt::FunctionStmt&>(stmt));
+        } else if(stmt.typeName() == "StructStmt") {
+            return this->visit(static_cast<const Stmt::StructStmt&>(stmt));
+        } else if(stmt.typeName() == "ImplStmt") {
+            return this->visit(static_cast<const Stmt::ImplStmt&>(stmt));
         } else {
             return StmtRetType();
         }
@@ -347,7 +402,7 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
                 TokenType type = keywordEnumVal(stmt.type);
                 alloca = createEntryBlockAlloca(
                     ir_builder->GetInsertBlock()->getParent(),
-                    getLLVMTypeRaw(type),
+                    getLLVMTypeRaw(type, stmt.type),
                     stmt.name
                 );
 
@@ -361,6 +416,13 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
         if(!stmt.type.empty()) {
             // std::cout<<"Creating a var stmt:"<<stmt.type<<"\n";
             switch(keywordEnumVal(stmt.type)) {
+
+                case TokenType::K_BOOL:
+                    the_module->getOrInsertGlobal(stmt.name, ir_builder->getInt1Ty());
+                    gl_var = the_module->getNamedGlobal(stmt.name);
+                    gl_var->setInitializer((llvm::Constant*)value);
+                    gl_var->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+                    break;
 
                 case TokenType::K_UINT8: 
                 case TokenType::K_INT8:
@@ -404,6 +466,13 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
 
                 case TokenType::K_FLOAT64:
                     the_module->getOrInsertGlobal(stmt.name, ir_builder->getDoubleTy());
+                    gl_var = the_module->getNamedGlobal(stmt.name);
+                    if(value != nullptr) gl_var->setInitializer((llvm::Constant*)value);
+                    gl_var->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+                    break;
+
+                case TokenType::OBJECT_TYPE:
+                    the_module->getOrInsertGlobal(stmt.name, getStructure(stmt.type));
                     gl_var = the_module->getNamedGlobal(stmt.name);
                     if(value != nullptr) gl_var->setInitializer((llvm::Constant*)value);
                     gl_var->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
@@ -464,6 +533,14 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
 
         std::vector<llvm::Type*> args;
         // fill up the args with types
+
+        // first, check if it is part of impl block. If it is, then add struct type pointer as first argument.
+        if(scope == Scope::IMPL) {
+            // the type should ideally be defined by now. So, we can get it from `user_defined_types`.
+            llvm::PointerType* str_ptr = llvm::PointerType::get(user_defined_types[stmt.struct_or_trait_name], 0);
+            args.push_back(str_ptr);
+            
+        }
         for(auto arg_itr=stmt.params.begin(); arg_itr != stmt.params.end(); arg_itr++) {
             args.push_back((*arg_itr).second);
         }
@@ -477,10 +554,21 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
 
         // setting names for parameters
         auto itr = stmt.params.begin();
+        bool has_set_struct_name = false;
         for(auto &arg: func->args()) {
+            
+            if(!has_set_struct_name && scope == Scope::IMPL) {
+                // first param is set as pointer to struct type if function is in impl method
+                arg.setName("self");
+                has_set_struct_name = true;
+                continue;
+            }
+
             arg.setName((*itr).first);
             itr++;
         }
+
+        return StmtRetType();
     }
 
     StmtRetType visit(const Stmt::FunctionStmt& stmt) override {
@@ -496,17 +584,24 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             llvm::BasicBlock *func_block = llvm::BasicBlock::Create(*the_context, "entry", func);
             ir_builder->SetInsertPoint(func_block);
 
+            Scope old_scope = scope;
             scope = Scope::FUNCTION;
             auto old_values = named_values;
 
             // updating named values. skipping it for now.
-            for(uint32_t i=0; i<func->arg_size(); i++) {
-                llvm::Argument* arg = func->getArg(i);
-                if(!arg->hasName()) {
-                    logger->logMessage(LogLevel::WARNING, "Function argument not having a name");
-                    continue;
-                }
-                named_values[std::string(arg->getName().data())] = arg;
+            // for(uint32_t i=0; i<func->arg_size(); i++) {
+            //     llvm::Argument* arg = func->getArg(i);
+            //     if(!arg->hasName()) {
+            //         logger->logMessage(LogLevel::WARNING, "Function argument not having a name");
+            //         continue;
+            //     }
+            //     named_values[std::string(arg->getName().data())] = arg;
+            // }
+            
+            for(auto &arg: func->args()) {
+                llvm::AllocaInst* alloca = createEntryBlockAlloca(func, arg.getType(), std::string(arg.getName()));
+                ir_builder->CreateStore(&arg, alloca);
+                named_values[std::string(arg.getName())] = alloca;
             }
 
             // going into generation of body
@@ -518,6 +613,7 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
             llvm::verifyFunction(*func);
 
             named_values = old_values;
+            scope = old_scope;
         }
 
     }
@@ -578,6 +674,46 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
     }
 
     StmtRetType visit(const Stmt::LoopStmt& stmt)  override {
+        return StmtRetType();
+    }
+
+    StmtRetType visit(const Stmt::StructStmt& stmt) override {
+        std::string name = stmt.name->getTokenString(source_code);
+        
+
+        Scope prev_scope = scope;
+        scope = Scope::STRUCT;
+
+        llvm::StructType* structure = getStructure(name);
+
+        std::vector<llvm::Type*> mems;
+
+        for(size_t i=0; i<stmt.members.size(); i++) {
+            mems.emplace_back(getLLVMTypeRaw(keywordEnumVal(stmt.members[i]->type)));
+        }
+
+        structure->setBody(mems);
+
+        scope = prev_scope;
+
+        return StmtRetType();
+    }
+
+    StmtRetType visit(const Stmt::ImplStmt& stmt) override {
+        std::string name = stmt.name->getTokenString(source_code);
+
+        Scope prev_scope = scope;
+        scope = Scope::IMPL;
+
+        llvm::StructType* structure = getStructure(name);
+        // current_impl_name = name;
+
+        for(size_t i=0; i<stmt.mem_funcs.size(); i++) {
+            this->visit(*stmt.mem_funcs[i]);
+        }
+
+        
+        scope = prev_scope;
         return StmtRetType();
     }
 
@@ -687,6 +823,8 @@ class CodegenVisitor : public Expr::Visitor<ExprRetType>, public Stmt::Visitor<S
                 double float64 = strtod(literal_str.c_str(), NULL);
                 return llvm::ConstantFP::get(*the_context, llvm::APFloat(float64));
             }
+            case TokenType::K_TRUE: return llvm::ConstantInt::get(*the_context, llvm::APInt(1, "1", (uint8_t)2));
+            case TokenType::K_FALSE: return llvm::ConstantInt::get(*the_context, llvm::APInt(1, "0", (uint8_t)2));
             case TokenType::IDENTIFIER: {
                 auto var_name = expr.token->getTokenString(source_code);
                 if(named_values.count(var_name) > 0) 
