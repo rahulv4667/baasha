@@ -1,6 +1,9 @@
-var x = 10;
+struct hello {
+    x: int32
+}
 
-struct x {
-    var x int32
-    x + 2;
+func main() -> int32  {
+    var x = 10 or 2;
+    x = 11 * 3 + 2;
+    var y = x;
 }

@@ -1,0 +1,62 @@
+
+File content:
+struct hello {
+    x: int32
+}
+
+func main() -> int32  {
+    var x = 10;
+}
+========================================================================
+Token{ tok_type: K_STRUCT, value: "struct" }
+Token{ tok_type: IDENTIFIER, value: "hello" }
+Token{ tok_type: CURLY_OPEN, value: "{" }
+Token{ tok_type: IDENTIFIER, value: "x" }
+Token{ tok_type: COLON, value: ":" }
+Token{ tok_type: K_INT32, value: "int32" }
+Token{ tok_type: CURLY_CLOSE, value: "}" }
+Token{ tok_type: K_FUNC, value: "func" }
+Token{ tok_type: IDENTIFIER, value: "main" }
+Token{ tok_type: BRACKET_OPEN, value: "(" }
+Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Token{ tok_type: RIGHT_ARROW, value: "->" }
+Token{ tok_type: K_INT32, value: "int32" }
+Token{ tok_type: CURLY_OPEN, value: "{" }
+Token{ tok_type: K_VAR, value: "var" }
+Token{ tok_type: IDENTIFIER, value: "x" }
+Token{ tok_type: EQUAL, value: "=" }
+Token{ tok_type: INT_LITERAL, value: "10" }
+Token{ tok_type: SEMICOLON, value: ";" }
+Token{ tok_type: CURLY_CLOSE, value: "}" }
+Token{ tok_type: FILE_EOF, value: "" }
+=========================================================================
+Calling declaration
+In declaration()
+In struct_declaration()
+Calling declaration
+In declaration()
+In block()
+In prototype()
+In block()
+In statement()
+In var_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: INT_LITERAL, value: "10" }
+In literal()
+Declarations: 2
+Decl: StructDecl { name: Token{ tok_type: IDENTIFIER, value: "hello" }, fields: [(Token{ tok_type: IDENTIFIER, value: "x" }, Token{ tok_type: K_INT32, value: "int32" })] }
+Decl: FuncDef { prototype: Prototype { name: Token{ tok_type: IDENTIFIER, value: "main" }, parameters: [], returntypes: [Token{ tok_type: K_INT32, value: "int32" }] }, block: Block { statements: [Var { name: Token{ tok_type: IDENTIFIER, value: "x" }, datatype: None, initialization_value: Some(Literal { value: Token{ tok_type: INT_LITERAL, value: "10" }, datatype: yet_to_infer }) }] } }

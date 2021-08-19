@@ -1,14 +1,22 @@
 use unicode_segmentation::UnicodeSegmentation;
 use crate::globals::TokenType;
-use crate::logger::{self, log_message};
+use crate::logger;
+use std::fmt;
 
 #[allow(dead_code)]
-#[derive(Debug,Clone)]
+// #[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Token {
-    tok_type: TokenType,
-    value: String,
-    line: usize,
-    col: usize
+    pub tok_type: TokenType,
+    pub value: String,
+    pub line: usize,
+    pub col: usize
+}
+
+impl fmt::Debug for Token {
+    fn fmt(&self, f: &mut fmt::Formatter)   -> fmt::Result {
+        return write!(f, "Token{{ tok_type: {:?}, value: {:?} }}", self.tok_type, self.value);
+    }
 }
 
 #[allow(dead_code)]
@@ -45,8 +53,6 @@ impl Lexer {
         }
         return self.str_vec[self.current].clone();
     }
-
-
 
 
     fn peek_next(&self) -> String {
@@ -92,8 +98,10 @@ impl Lexer {
 
     fn is_alpha(c: String) -> bool {
         return match c.as_str() {
-            "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z" => true,
-            "a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z" => true,
+            "A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|
+            "N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z"     => true,
+            "a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"l"|"m"|
+            "n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z"     => true,
             _ => false
         }
     }
@@ -184,7 +192,7 @@ impl Lexer {
         }
 
         self.tokens.push(Token{
-            tok_type: if is_int {TokenType::INT_LITERAL} else {TokenType::HEX_LITERAL},
+            tok_type: if is_int {TokenType::INT_LITERAL} else {TokenType::FLOAT_LITERAL},
             value: (&self.str_vec[self.start..self.current]).join(""),
             col: self.col,
             line: self.line_num
@@ -269,22 +277,27 @@ impl Lexer {
 
             "var"           => TokenType::K_VAR,
 
-            _               => {
-                // if identifier, check if it is a struct or impl name.
-                let last_tok: Option<&Token> = self.tokens.last();
-                let ttype: TokenType = match last_tok {
-                    Some(Token{tok_type: TokenType::K_STRUCT, ..}) |
-                    Some(Token{tok_type: TokenType::K_IMPL,   ..}) |
-                    Some(Token{tok_type: TokenType::IDENTIFIER, ..}) => TokenType::OBJECT_TYPE,
-                    _   =>  TokenType::IDENTIFIER
-                };
-                ttype
-            }
+            "while"         => TokenType::K_WHILE,
+
+            // _               => {
+            //     // if identifier, check if it is a struct or impl name.
+            //     let last_tok: Option<&Token> = self.tokens.last();
+            //     let ttype: TokenType = match last_tok {
+            //         Some(Token{tok_type: TokenType::K_STRUCT, ..}) |
+            //         Some(Token{tok_type: TokenType::K_IMPL,   ..}) |
+            //         Some(Token{tok_type: TokenType::K_TRAIT,  ..}) |
+            //         Some(Token{tok_type: TokenType::K_FOR,    ..}) |
+            //         Some(Token{tok_type: TokenType::IDENTIFIER, ..}) => TokenType::OBJECT_TYPE,
+            //         _   =>  TokenType::IDENTIFIER
+            //     };
+            //     ttype
+            // }
+            _               => TokenType::IDENTIFIER,
         };
 
 
         self.tokens.push(Token{
-            tok_type: tok_type,
+            tok_type,
             value: idntfr,
             col: self.col,
             line: self.line_num
@@ -361,15 +374,36 @@ impl Lexer {
             "*"         => if self.match_("=")  {TokenType::ASTERISK_EQUAL}     else {TokenType::ASTERISK},
             "/"         => if self.match_("=")  {TokenType::SLASH_EQUAL}        else {TokenType::SLASH},
             "+"         => if self.match_("=")  {TokenType::PLUS_EQUAL}         else {TokenType::PLUS},
-            "-"         => if self.match_("=")  {TokenType::MINUS_EQUAL}        else {TokenType::MINUS},
+            "-"         => if self.match_("=")  {TokenType::MINUS_EQUAL}        
+                            else if self.match_(">") {TokenType::RIGHT_ARROW}
+                            else  {TokenType::MINUS},
             "|"         => if self.match_("=")  {TokenType::BITWISE_OR_EQUAL}   else {TokenType::BITWISE_OR},
             "&"         => if self.match_("=")  {TokenType::BITWISE_AND_EQUAL}  else {TokenType::BITWISE_AND},
             "^"         => if self.match_("=")  {TokenType::BITWISE_XOR_EQUAL}  else {TokenType::BITWISE_XOR},
+            "!"         => if self.match_("=")  {TokenType::BANG_EQUAL}         else {TokenType::BANG},
+            "<"         => if self.match_("=")  {TokenType::LESS_EQUAL}         
+                            else if self.match_("<") {
+                                if self.peek() == "=" {TokenType::LEFT_SHIFT_EQUAL}
+                                else {TokenType::LEFT_SHIFT}
+                            } else if self.match_("-") {
+                                TokenType::LEFT_ARROW
+                            }
+                            else {TokenType::LESS_THAN},
+            ">"         => if self.match_("=")  {TokenType::GREAT_EQUAL}
+                            else if self.match_(">")    {
+                                // not peek next coz already advanced in match_
+                                if self.peek() == "=" {TokenType::RIGHT_SHIFT_EQUAL}
+                                else {TokenType::RIGHT_SHIFT}
+                            }
+                            else {TokenType::GREAT_THAN},
+            "~"         => TokenType::BITWISE_NOT,
             "$"         => TokenType::DOLLAR,
             "#"         => TokenType::HASH,
             ";"         => TokenType::SEMICOLON,
+            ":"         => TokenType::COLON,
             ","         => TokenType::COMMA,
             "."         => TokenType::DOT,
+            "_"         => TokenType::UNDERSCORE,
             "\""        => { self.string_(); TokenType::ERROR }
             _           => TokenType::ERROR 
         };
