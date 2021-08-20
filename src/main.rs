@@ -7,6 +7,7 @@ mod lexer;
 mod visitor;
 mod ast;
 mod parser;
+mod type_check_visitor;
 use lexer::Lexer;
 // use ast::{Stmt, Expr};
 use parser::Parser;

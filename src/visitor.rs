@@ -18,6 +18,12 @@ pub trait Visitor<T> {
     fn visit_decl(&mut self, decl: &Decl)   -> T;
 }
 
+pub trait MutableVisitor<T> {
+    fn visit_stmt(&mut self, stmt: &mut Stmt) -> T;
+    fn visit_expr(&mut self, expr: &mut Expr) -> T;
+    fn visit_decl(&mut self, decl: &mut Decl) -> T;
+}
+
 // impl Data for Stmt {
 //     fn accept<V:Visitor>(&self, visitor: &mut V) -> V::Result {
 //         return visitor.visit_stmt(self);

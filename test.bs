@@ -3,7 +3,5 @@ struct hello {
 }
 
 func main() -> int32  {
-    var x = 10 or 2;
-    x = 11 * 3 + 2;
-    var y = x;
+    a = 20 <= x;
 }

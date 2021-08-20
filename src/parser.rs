@@ -57,7 +57,11 @@ impl Parser {
             match self.peek() {
                 Some(Token{tok_type, ..}) => tok_type == TokenType::FILE_EOF,
                 None => return false
-            };
+            } /*||
+            match self.curr() {
+                Some(Token{tok_type,..}) => tok_type == TokenType::FILE_EOF,
+                None => return false
+            }*/;
     }
 
     fn peek(&self) -> Option<Token> {
@@ -70,6 +74,7 @@ impl Parser {
     }
 
     fn curr(&self) -> Option<Token> { 
+        if self.current >= self.tokens.len() { return None; }
         return Some(self.tokens[self.current - 1].clone());
     }
 
@@ -116,7 +121,8 @@ impl Parser {
 
         while !self.is_end() {
             if let Some(tok) = self.curr() {
-                if tok.tok_type == TokenType::SEMICOLON {return; }
+                if tok.tok_type == TokenType::SEMICOLON || tok.tok_type == TokenType::CURLY_CLOSE
+                {return; }
             }
 
             if let Some(tok) = self.peek() {
@@ -428,14 +434,15 @@ impl Parser {
         match self.peek() {
             Some(Token{tok_type, ..}) => {
                 match tok_type {
-                    TokenType::K_IF => self.if_stmt(),
+                    TokenType::K_IF     => self.if_stmt(),
                     TokenType::K_FOR    => self.for_stmt(),
                     TokenType::K_RETURN => self.return_stmt(),
-                    TokenType::K_WHILE => self.while_stmt(),
+                    TokenType::K_WHILE  => self.while_stmt(),
                     TokenType::K_VAR    => self.var_stmt(),
                     TokenType::K_STRUCT|TokenType::K_IMPL|
                     TokenType::K_TRAIT|TokenType::K_FUNC => self.decl_stmt(),
                     TokenType::SEMICOLON    => {self.match_(TokenType::SEMICOLON); None},
+                    TokenType::FILE_EOF     => {println!("Peek:{:?}", self.peek());self.advance(); None},
                     _ => self.expr_stmt()
                 }
             },
@@ -550,20 +557,40 @@ impl Parser {
 
     fn expr_stmt(&mut self) -> Option<Box<Stmt>> { 
         println!("In expr_stmt()");
-        match self.expression() {
+        match self.assignment() {
             Some(expr) => Some(Box::new(Stmt::Expression{expr})),
-            _ => None
+            _ => match self.expression() {
+                Some(expr) => return Some(Box::new(Stmt::Expression{expr})),
+                _ => {
+                    logger::log_message(logger::LogLevel::ERROR, 
+                        self.tokens[self.current].col, self.tokens[self.current].line, 
+                        "Unexpected token in expression".to_string());
+                    self.synchronize();
+                    None
+                }
+            }
         }
+        // match self.expression() {
+        //     Some(expr) => Some(Box::new(Stmt::Expression{expr})),
+        //     _ => {
+        //         logger::log_message(logger::LogLevel::ERROR, 
+        //             self.tokens[self.current].col, self.tokens[self.current].line, 
+        //             "Unexpected token in expression".to_string());
+        //         self.synchronize();
+        //         None
+        //     }
+        // }
     }
 
 
     fn expression(&mut self) -> Option<Box<Expr>> { 
         println!("In expression()");
-        match self.assignment() {
-            Some(expr) => return Some(expr),
-            _ => ()
-        }
+        // match self.assignment() {
+        //     Some(expr) => return Some(expr),
+        //     _ => ()
+        // }
 
+        // return self.assignment();
         // return self.conditional_expr();
         return self.logical_OR_expr();
     }
@@ -572,13 +599,13 @@ impl Parser {
         println!("In expression_list()");
         let mut expr_list: Vec<Box<Expr>> = vec![];
 
-        match self.expression() {
+        match self.expression()/*self.logical_OR_expr()*/ {
             Some(expr) => expr_list.push(expr),
             _ => return expr_list,
         }
 
         while self.match_(TokenType::COMMA) {
-            match self.expression() {
+            match self.expression()/*self.logical_OR_expr()*/ {
                 Some(expr) => expr_list.push(expr),
                 _ => return expr_list
             }
@@ -644,6 +671,7 @@ impl Parser {
     fn assignment(&mut self) -> Option<Box<Expr>> { 
         println!("In assignment()");
         let first_expr = self.logical_OR_expr();
+        if first_expr.is_none() { return None; }
 
         // if there is a comma or assignment ops, then it is an assignment expression, 
         // else it is normal expression, so it can return.
@@ -661,7 +689,7 @@ impl Parser {
                 // read rest of target_list if comma separated.
                 if peek.tok_type == TokenType::COMMA {
                     self.advance();
-                    target_list.append(&mut self.expression_list());
+                    target_list.append(&mut self.target_list());
                 }
 
                 // println!("Targetlist: {:?}", target_list);
@@ -671,18 +699,27 @@ impl Parser {
                     match self.consume_multi(TokenType::get_assignment_ops(), 
                     "Expected one of assignment operators".to_string()) {
                         Some(_)     => (),
-                        _ => { self.synchronize();/*println!("After consume:{:?}", self.curr());*/ return None;},
+                        _ => { /*self.synchronize();*//*println!("After consume:{:?}", self.curr());*/ return None;},
                     }
 
                     // reading rhs - source_list
                     let expr_list = self.expression_list();
 
+                    if expr_list.len() == 0 {
+                        logger::log_message(logger::LogLevel::ERROR, 
+                            self.tokens[self.current].col, self.tokens[self.current].line, 
+                            "R-value incorrect or empty".to_string());
+                        // self.synchronize();
+                        return None;
+                    }
+
                     return Some(Box::new(Expr::Assignment{target_list, expr_list, datatype: Datatype::yet_to_infer}));
                 } else {
+                    println!("Target-list: {:?}", target_list);
                     logger::log_message(logger::LogLevel::ERROR, 
                         self.tokens[self.current].col, self.tokens[self.current].line, 
                         "L-value list incorrect. Only variables and attribute references are allowed".to_string());
-                        self.synchronize();
+                        // self.synchronize();
                         return None;
                 }
 
@@ -1136,7 +1173,10 @@ impl Parser {
 
             match self.expression() {
                 Some(expr) => field_value = expr,
-                _ => return None,
+                _ => {
+                    self.synchronize();
+                    return None;
+                }
             }
 
             fields.push((field_name, field_value));
