@@ -3,5 +3,5 @@ struct hello {
 }
 
 func main() -> int32  {
-    a = 20 <= x;
+    a = 20 as int32, 10 as int64;
 }

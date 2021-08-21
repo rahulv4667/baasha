@@ -1074,6 +1074,12 @@ impl Parser {
             } else if self.match_(TokenType::BRACKET_OPEN) {
                 let arguments = self.expression_list();
                 atom = Box::new(Expr::Call{callee: atom, arguments, datatype: Datatype::yet_to_infer});
+            } else if self.match_(TokenType::K_AS) {
+                match self.consume_multi(TokenType::get_datatypes(), 
+                "Expected a datatype after 'as' keyword for type casting".to_string()) {
+                    Some(tok) => atom = Box::new(Expr::Cast{variable:atom, cast_type: tok}),
+                    _ => return Some(atom)
+                }
             } else {
                 break;
                 // return Some(atom);

@@ -5,7 +5,7 @@ pub enum TokenType {
 
     // keywords
     K_VAR, K_STRUCT, K_IMPL, K_TRAIT, K_FUNC, K_OR, K_AND, K_IF, K_ELSE, K_FOR, K_WHILE,
-    K_RETURN, /* K_SELF */
+    K_RETURN, K_AS,/* K_SELF */
 
     // datatypes
     K_INT8, K_INT16, K_INT32, K_INT64,

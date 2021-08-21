@@ -60,12 +60,13 @@ unary            -> unary-op unary | primary                                  ->
 unary-op         -> "~" | "!" | "-" | "+"
 relational-op    -> "<"|">"|"<="|">="
 
-primary     -> atom | attributeref | /* subscription | slicing */ | call
+primary     -> atom | attributeref | /* subscription | slicing */ | call | cast
 atom        -> identifier | literal | grouping | structExpr
 grouping    -> "(" expression ")"
 structExpr  -> identifier "{" (identifier ":" expression)* ""
 attributeref-> primary "." identifier
 call        -> primary "(" expr_list ")" 
+cast        -> primary "as" DATATYPE
 
 
 

@@ -242,6 +242,7 @@ impl Lexer {
 
         let tok_type: TokenType = match idntfr.as_str() {
             "and"           => TokenType::K_AND,
+            "as"            => TokenType::K_AS,
             
             "bool"          => TokenType::K_BOOL,
             

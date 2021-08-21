@@ -164,6 +164,14 @@ impl Visitor<()> for Printer {
                     self.visit_expr(&expr);
                     self.space_width -= 10;
                 },
+
+            Expr::Cast { variable, cast_type} 
+                => {
+                    self.print_data(format!("Cast{{ cast_to: {:?} }}", cast_type));
+                    self.space_width += 5;
+                    self.visit_expr(&variable);
+                    self.space_width -= 5;
+                },
             _ => unimplemented!()
         }
     }

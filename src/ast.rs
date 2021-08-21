@@ -66,5 +66,6 @@ pub enum Expr {
     StructExpr  {struct_name: Token, fields: /*Vec<Expr>*/Vec<(Token, Box<Expr>)>, datatype: Datatype},
     Assignment  {target_list: Vec<Box<Expr>>, /*Expr=Expr::Identifier */
         expr_list: Vec<Box<Expr>>, datatype: Datatype},  
-    Grouping    { expr: Box<Expr> }
+    Grouping    { expr: Box<Expr> },
+    Cast        { variable: Box<Expr>, cast_type: Token}
 }
