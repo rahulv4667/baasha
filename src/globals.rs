@@ -82,7 +82,7 @@ impl TokenType {
     pub fn get_unary_ops() -> Vec<TokenType> {
         vec![
             TokenType::BANG,
-            TokenType::BITWISE_XOR,
+            TokenType::BITWISE_NOT,
             TokenType::MINUS,
             TokenType::PLUS
         ]

@@ -18,10 +18,10 @@ pub trait Visitor<T> {
     fn visit_decl(&mut self, decl: &Decl)   -> T;
 }
 
-pub trait MutableVisitor<T> {
-    fn visit_stmt(&mut self, stmt: &mut Stmt) -> T;
-    fn visit_expr(&mut self, expr: &mut Expr) -> T;
-    fn visit_decl(&mut self, decl: &mut Decl) -> T;
+pub trait MutableVisitor<D, S, E> {
+    fn visit_stmt(&mut self, stmt: &mut Stmt) -> S;
+    fn visit_expr(&mut self, expr: &mut Expr) -> E;
+    fn visit_decl(&mut self, decl: &mut Decl) -> D;
 }
 
 // impl Data for Stmt {
@@ -135,25 +135,30 @@ impl Visitor<()> for Printer {
                 },
 
             #[allow(unused_variables)]
-            Expr::Assignment{target_list, expr_list, datatype}
+            // Expr::Assignment{target_list, expr_list, datatype}
+            Expr::Assignment{target, expr, operator, datatype}
                 => {
-                    let mut i: usize = 0;
+                    // let mut i: usize = 0;
                     self.print_data("Assignment{{ }}".to_string());
                     self.space_width += 13;
-                    while i < target_list.len() {
-                        self.print_data("Target".to_string());
-                        self.visit_expr(&target_list[i]);
-                        i += 1;
-                    }
+                    self.print_data("Target".to_string());
+                    self.visit_expr(target);
+                    // while i < target_list.len() {
+                    //     self.print_data("Target".to_string());
+                    //     self.visit_expr(&target_list[i]);
+                    //     i += 1;
+                    // }
 
-                    // keeping things separate coz, there could be function call on RHS which
-                    // makes number of values in the lists to not match.
-                    let mut i: usize = 0;
-                    while i < expr_list.len() {
-                        self.print_data("Source".to_string());
-                        self.visit_expr(&expr_list[i]);
-                        i += 1;
-                    }
+                    self.print_data("Source".to_string());
+                    self.visit_expr(expr);
+                    // // keeping things separate coz, there could be function call on RHS which
+                    // // makes number of values in the lists to not match.
+                    // let mut i: usize = 0;
+                    // while i < expr_list.len() {
+                    //     self.print_data("Source".to_string());
+                    //     self.visit_expr(&expr_list[i]);
+                    //     i += 1;
+                    // }
                     self.space_width -= 13;
                 },
             
@@ -172,6 +177,40 @@ impl Visitor<()> for Printer {
                     self.visit_expr(&variable);
                     self.space_width -= 5;
                 },
+            Expr::ExprList{expr_list}
+                => {
+                    self.print_data("Expression list{{ }}".to_string());
+                    self.space_width += 13;
+                    let mut i: usize = 0;
+                    while i < expr_list.len() {
+                        self.print_data(format!("Expression {}", i+1));
+                        self.visit_expr(&expr_list[i]);
+                        i += 1;
+                    } 
+                    self.space_width -= 13;
+                },
+            #[allow(unused_variables)]
+            Expr::Call{callee, arguments, datatype}
+                => {
+                    self.print_data("Function Call{{ }}".to_string());
+                    self.space_width += 13;
+                    
+                    self.print_data("Callee {{ }}".to_string());
+                    self.space_width += 10;
+
+                    self.visit_expr(callee);
+                    let mut i=0;
+                    while i < arguments.len() {
+                        self.print_data(format!("Argument {}", i+1));
+                        self.visit_expr(&arguments[i]);
+                        i += 1;
+                    }
+
+                    self.space_width -= 10;
+
+                    self.space_width -= 13;
+                },
+            #[allow(unreachable_patterns)]
             _ => unimplemented!()
         }
     }
@@ -216,13 +255,15 @@ impl Visitor<()> for Printer {
                     self.space_width -= 13;
                 },
 
-            Stmt::Return{expr_list}
+            // Stmt::Return{expr_list}
+            Stmt::Return{expr}
                 => {
                     self.print_data("Return{{ }}".to_string());
                     self.space_width += 10;
-                    for expr in expr_list {
-                        self.visit_expr(&expr);
-                    }
+                    self.visit_expr(&expr);
+                    // for expr in expr_list {
+                    //     self.visit_expr(&expr);
+                    // }
                     self.space_width -= 10;
                 },
 

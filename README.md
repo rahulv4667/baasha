@@ -36,15 +36,18 @@ loopStmt        -> "loop" expression block
 forStmt         -> "for"    assignment ";" expression ";" expr_list block
 whileStmt       -> "while" expression block
 
-exprStmt        -> (expression)* ";"
-expression      -> assignment | /* conditional-expr */ logORexpr
-assignment      -> target_list assignment-op expr_list
-assignment-op   -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
-target_list     -> target|"_" ("," target|"_")*
-target          -> identifier | attributeref | /* subscription | slicing */
-expr_list       -> expression ("," expression)*
+exprStmt        -> (expression)? ";"
+expression      -> assignment-expr | expression "," assignment-expr         -> assignment-expr ("," assignment-expr)*
 
-/*conditional_expr -> logORexpr ("if" logORexpr "else" block)* */
+
+assignment-expr -> /*conditional-expr*/ logORexpr | unaryExpr assignment-op assignment-expr
+                        -> logORexpr (assignment-op assignment-expr)*
+assignment-op   -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+
+
+target          -> identifier | attributeref | /* subscription | slicing */
+
+
 logORexpr        -> logANDexpr | logORexpr "or" logANDexpr          -> logANDexpr ("or" logANDexpr)*
 logANDexpr       -> inclORexpr | logANDexpr "and" inclORexpr        -> inclORexpr ("and" inclORexpr)*
 inclORexpr       -> exclORexpr | inclORexpr "|" exclORexpr          -> exclORexpr ("|" exclORexpr)*
@@ -72,45 +75,16 @@ cast        -> primary "as" DATATYPE
 
 DATATYPE    -> "int8"|"int16"|"int32"|"int64"|"uint8"|"uint16"|"uint32"|"uint64"|"float32"|"float64"|"bool"|IDENTIFIER
 type_list   -> DATATYPE ("," DATATYPE)*
-
-/***************************************************
-expression      -> IDENTIFIER | LITERAL
-                    | expression    "+"     expression
-                    | expression    "-"     expression
-                    | expression    "*"     expression
-                    | expression    "/"     expression
-                    | expression    "%"     expression
-                    | expression    "+="    expression
-                    | expression    "-="    expression
-                    | expression    "*="    expression
-                    | expression    "/="    expression
-                    | expression    "%="    expression
-                    | expression    "^"     expression
-                    | expression    "^="    expression
-                    | expression    "|"     expression
-                    | expression    "|="    expression
-                    | expression    "&"     expression
-                    | expression    "&="    expression
-                    | expression    "<<"    expression
-                    | expression    ">>"    expression
-                    | expression    "<<="   expression
-                    | expression    ">>="   expression
-                    | expression    "and"   expression
-                    | expression    "or"    expression
-                    | unary 
-                    | assignment
-unary       -> ("!" | "-" | "~") (unary | call)
-
-call        -> primary ( "(" arguments? ")" | "." IDENTIFIER)*
-get         -> (get | call) "." (get|call) | IDENTIFIER
-primary     -> INTEGER | "true" | "false" | FLOAT | attributeref | structExpr
-attributeref    -> (call ".")? IDENTIFIER 
-structExpr  -> IDENTIFIER "{" (IDENTIFIER ":" expression ",")* "}"
-*********************************************************/
-
-
 ```
 
+[comment]: <> ( target_list     -> target|"_" ("," target|"_")* )
+
+
+[comment]: <> (target_list     -> target|"_" ("," target|"_")*)
+[comment]: <> (conditional_expr -> logORexpr ("if" logORexpr "else" block)*)
+[comment]: <> (expr_list       -> expression ("," expression)*)
+[comment]: <> (assignment      -> target_list assignment-op expr_list)
+ 
 **Lexical Grammar:**
 ```
 INTEGER     -> HEX_LIT | OCTAL_LIT | DIGIT+

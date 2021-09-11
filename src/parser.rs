@@ -550,62 +550,86 @@ impl Parser {
             _ => return None,
         }
 
-        let expr_list = self.expression_list();
-        return Some(Box::new(Stmt::Return{expr_list}));
+        match self.expression() {
+            Some(expr) => Some(Box::new(Stmt::Return{expr})),
+            _ => None
+        }
+    
     }
     
 
     fn expr_stmt(&mut self) -> Option<Box<Stmt>> { 
         println!("In expr_stmt()");
-        match self.assignment() {
-            Some(expr) => Some(Box::new(Stmt::Expression{expr})),
-            _ => match self.expression() {
-                Some(expr) => return Some(Box::new(Stmt::Expression{expr})),
-                _ => {
-                    logger::log_message(logger::LogLevel::ERROR, 
-                        self.tokens[self.current].col, self.tokens[self.current].line, 
-                        "Unexpected token in expression".to_string());
-                    self.synchronize();
-                    None
-                }
-            }
-        }
-        // match self.expression() {
+        // match self.assignment() {
         //     Some(expr) => Some(Box::new(Stmt::Expression{expr})),
-        //     _ => {
-        //         logger::log_message(logger::LogLevel::ERROR, 
-        //             self.tokens[self.current].col, self.tokens[self.current].line, 
-        //             "Unexpected token in expression".to_string());
-        //         self.synchronize();
-        //         None
+        //     _ => match self.expression() {
+        //         Some(expr) => return Some(Box::new(Stmt::Expression{expr})),
+        //         _ => {
+        //             logger::log_message(logger::LogLevel::ERROR, 
+        //                 self.tokens[self.current].col, self.tokens[self.current].line, 
+        //                 "Unexpected token in expression".to_string());
+        //             self.synchronize();
+        //             None
+        //         }
         //     }
         // }
+        match self.expression() {
+            Some(expr) => Some(Box::new(Stmt::Expression{expr})),
+            _ => {
+                logger::log_message(
+                    logger::LogLevel::ERROR, 
+                    self.tokens[self.current].col, self.tokens[self.start].line, 
+                    "Unexpected token in expression".to_string()
+                );
+                self.synchronize();
+                None
+            }
+        }
     }
 
 
     fn expression(&mut self) -> Option<Box<Expr>> { 
         println!("In expression()");
-        // match self.assignment() {
-        //     Some(expr) => return Some(expr),
-        //     _ => ()
-        // }
+        let mut expr_list: Vec<Box<Expr>> = vec![];
 
-        // return self.assignment();
-        // return self.conditional_expr();
-        return self.logical_OR_expr();
+        match self.assignment() {
+            Some(expr) => expr_list.push(expr),
+            _ => return None
+        }
+
+
+
+        while self.match_(TokenType::COMMA) {
+
+            match self.assignment() {
+                Some(expr) => expr_list.push(expr),
+                _ => {
+                    logger::log_message(logger::LogLevel::ERROR, 
+                        self.tokens[self.current].col, self.tokens[self.current].line, 
+                        "Expected expression after comma".to_string()
+                    );
+                    self.synchronize();
+                    break;
+                }
+            }
+        } 
+        
+        return Some(Box::new(Expr::ExprList{expr_list}));
+        
+        // return self.logical_OR_expr();
     }
 
     fn expression_list(&mut self) -> Vec<Box<Expr>> { 
         println!("In expression_list()");
         let mut expr_list: Vec<Box<Expr>> = vec![];
 
-        match self.expression()/*self.logical_OR_expr()*/ {
+        match /*self.expression()*/self.logical_OR_expr() {
             Some(expr) => expr_list.push(expr),
             _ => return expr_list,
         }
 
         while self.match_(TokenType::COMMA) {
-            match self.expression()/*self.logical_OR_expr()*/ {
+            match /*self.expression()*/self.logical_OR_expr() {
                 Some(expr) => expr_list.push(expr),
                 _ => return expr_list
             }
@@ -668,67 +692,48 @@ impl Parser {
         return result;
     }
 
+    fn is_target_valid(&mut self, target: &Box<Expr>) -> bool {
+        match **target {
+            Expr::AttributeRef{..} => return true,
+            Expr::Variable{..} => return true,
+            // in future - subscription and slicing can also be added
+            _ => return false
+        }
+    }
+
     fn assignment(&mut self) -> Option<Box<Expr>> { 
         println!("In assignment()");
-        let first_expr = self.logical_OR_expr();
-        if first_expr.is_none() { return None; }
+        let lhs = self.logical_OR_expr();
+        if lhs.is_none() { return None; }
 
-        // if there is a comma or assignment ops, then it is an assignment expression, 
-        // else it is normal expression, so it can return.
         if let Some(peek) = self.peek() {
-            
-            if peek.tok_type == TokenType::COMMA || TokenType::get_assignment_ops().contains(&peek.tok_type){
-                // self.advance();
-                
-                let mut target_list: Vec<Box<Expr>> = vec![];
-                match first_expr {
-                    Some(expr) => target_list.push(expr),
-                    _ => ()
-                }
-
-                // read rest of target_list if comma separated.
-                if peek.tok_type == TokenType::COMMA {
-                    self.advance();
-                    target_list.append(&mut self.target_list());
-                }
-
-                // println!("Targetlist: {:?}", target_list);
-                // check if target_list has valid 
-                if self.is_target_list_valid(&target_list) {
-                    // println!("Before consume: {:?}", self.curr());
-                    match self.consume_multi(TokenType::get_assignment_ops(), 
-                    "Expected one of assignment operators".to_string()) {
-                        Some(_)     => (),
-                        _ => { /*self.synchronize();*//*println!("After consume:{:?}", self.curr());*/ return None;},
+            if TokenType::get_assignment_ops().contains(&peek.tok_type) {
+                // IF Borrow checking is supported in future, then a separate branch for `=` needs to be created.
+                // all assignment ops except `=` could be considered binary operator(Expr::Binary) 
+                // and Expr::Assignment can get rid of operator attribute
+                self.advance();
+                let operator = peek;
+                if let Some(expr) = self.assignment() {
+                    match lhs {
+                        Some(target) 
+                            => {
+                                if !self.is_target_valid(&target) {
+                                    log_message(logger::LogLevel::ERROR, 
+                                        self.tokens[self.current].col, self.tokens[self.current].line, 
+                                        "L-value incorrect. Only variables and attribute refs allowed".to_string());
+                                    return None;
+                                }
+                                return Some(Box::new(Expr::Assignment{target, operator, expr, datatype: Datatype::yet_to_infer}));
+                            }
+                        _ => {
+                            return None;
+                        }
                     }
-
-                    // reading rhs - source_list
-                    let expr_list = self.expression_list();
-
-                    if expr_list.len() == 0 {
-                        logger::log_message(logger::LogLevel::ERROR, 
-                            self.tokens[self.current].col, self.tokens[self.current].line, 
-                            "R-value incorrect or empty".to_string());
-                        // self.synchronize();
-                        return None;
-                    }
-
-                    return Some(Box::new(Expr::Assignment{target_list, expr_list, datatype: Datatype::yet_to_infer}));
-                } else {
-                    println!("Target-list: {:?}", target_list);
-                    logger::log_message(logger::LogLevel::ERROR, 
-                        self.tokens[self.current].col, self.tokens[self.current].line, 
-                        "L-value list incorrect. Only variables and attribute references are allowed".to_string());
-                        // self.synchronize();
-                        return None;
                 }
-
             } 
-        } else {
-            return None;
         }
 
-        return first_expr;
+        return lhs;
     }
 
     // fn conditional_expr(&self) -> Option<Box<Expr>> { 
@@ -1062,7 +1067,9 @@ impl Parser {
         }
 
         loop {
+            println!("In primary loop");
             if self.match_(TokenType::DOT) {
+                println!("In primary loop: attributeref");
                 // attributeref
                 match self.consume(TokenType::IDENTIFIER, 
                     "Expected an identifier after '.'".to_string()) {
@@ -1072,9 +1079,20 @@ impl Parser {
                 }
 
             } else if self.match_(TokenType::BRACKET_OPEN) {
+                println!("In primary loop: call");
                 let arguments = self.expression_list();
+                self.consume(TokenType::BRACKET_CLOSE, "Expected ')' after expressions list".to_string());
                 atom = Box::new(Expr::Call{callee: atom, arguments, datatype: Datatype::yet_to_infer});
+                // if let Some(arguments) = self.expression() {
+                //     atom = Box::new(Expr::Call{callee: atom, arguments, datatype: Datatype::yet_to_infer});
+                //     self.consume(TokenType::BRACKET_CLOSE, "Expected ')' after expressions list".to_string());
+
+                // } else {
+                //     self.consume(TokenType::BRACKET_CLOSE, "Expected ')' after expressions list".to_string());
+                //     return Some(atom);
+                // }
             } else if self.match_(TokenType::K_AS) {
+                println!("In primary loop: casting");
                 match self.consume_multi(TokenType::get_datatypes(), 
                 "Expected a datatype after 'as' keyword for type casting".to_string()) {
                     Some(tok) => atom = Box::new(Expr::Cast{variable:atom, cast_type: tok}),

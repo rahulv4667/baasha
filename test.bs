@@ -3,5 +3,6 @@ struct hello {
 }
 
 func main() -> int32  {
-    a = 20 as int32, 10 as int64;
+    //a = 20 as int32, 10 as int64;
+    x.b.c(a, b);
 }
