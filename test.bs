@@ -4,5 +4,9 @@ struct hello {
 
 func main() -> int32  {
     //a = 20 as int32, 10 as int64;
-    x.b.c(a, b);
+    //x.b.c(a, b);
+    //a = x.b();
+    //if b {} else {}
+    //for x = 10; x<10;x*=2 {  }
+    for x = 10 {}
 }

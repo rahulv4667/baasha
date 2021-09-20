@@ -31,15 +31,16 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                     self.visit_stmt(block);
                     self.symbol_table = pre_environment;
                 },
-            Decl::Prototype{name, parameters, returntypes}
-                => {
-                    self.symbol_table.func_table.insert(name.value.clone(), 
-                        Decl::Prototype{name: name.clone(), parameters: parameters.clone(), 
-                                returntypes: returntypes.clone()});
-                    for param in parameters {
-                        self.symbol_table.variable_table.insert(param.0.value.clone(), param.1.clone());
-                    }
-                },
+            // Decl::Prototype{name, parameters, returntypes}
+            //     => {
+            //         self.symbol_table.func_table.insert(name.value.clone(), 
+            //             Decl::Prototype{name: name.clone(), parameters: parameters.clone(), 
+            //                     returntypes: returntypes.clone()});
+            //         for param in parameters {
+            //             self.symbol_table.variable_table.insert(param.0.value.clone(), param.1.clone());
+            //         }
+            //     },
+            /////////////////////////////////////////////////////////////
             // Decl::ImplDecl{name, trait_name, funcs}
             //     => {
 
@@ -86,8 +87,26 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
 
 #[allow(dead_code, unused)]
 impl TypeChecker {
-    fn visit_cast_expr(&mut self, variable: &mut Box<Expr>, cast_type: &mut Token) -> Datatype {
-        unimplemented!()
+    fn visit_cast_expr(&mut self, variable: &mut Box<Expr>, casttype: &mut Token) -> Datatype {
+        let var_type = self.visit_expr(variable);
+        let mut cast_type = Datatype::get_datatype(&casttype.tok_type);
+        if let Datatype::object{..} = cast_type {
+            // check if a struct of given casttype exists
+            if self.symbol_table.struct_decls.contains_key(&casttype.value) {
+                cast_type = Datatype::object{name: casttype.value.clone()};
+            } else {
+                // casttype doesnt exist.
+                log_message(logger::LogLevel::ERROR, casttype.col, casttype.line, 
+                    "Given cast type doesn't exist. Make sure to declare structs before using.".to_string());
+                return var_type;
+            }
+        }
+
+        // if both are objects, check if they are castable while converting to LLVM IR by matching 
+
+
+        if var_type == Datatype::yet_to_infer { return Datatype::yet_to_infer; }
+        return cast_type.clone();
     }
 
     fn visit_grouping_expr(&mut self, expr: &mut Box<Expr>) -> Datatype {
@@ -181,7 +200,7 @@ impl TypeChecker {
                 _ => ()
             }
 
-            *datatype = if has_error {Datatype::yet_to_infer} else {Datatype::object};
+            *datatype = if has_error {Datatype::yet_to_infer} else {Datatype::object{name: struct_name.value.clone()}};
             return (*datatype).clone();
         } else {
             logger::log_message(logger::LogLevel::ERROR, struct_name.col, struct_name.line, 
@@ -209,16 +228,32 @@ impl TypeChecker {
         match operator.tok_type {
             TokenType::PLUS|TokenType::MINUS|TokenType::ASTERISK
             |TokenType::SLASH|TokenType::MOD => {
-                if lhs_datatype == Datatype::object || lhs_datatype == Datatype::bool {
-                    log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
-                                "LHS of operator is either an object or bool. Operation can't be performed".to_string());
-                    has_error = true;
+                // if lhs_datatype == Datatype::object{..} || lhs_datatype == Datatype::bool {
+                //     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
+                //                 "LHS of operator is either an object or bool. Operation can't be performed".to_string());
+                //     has_error = true;
+                // }
+                match lhs_datatype {
+                    Datatype::bool|Datatype::object{..} => {
+                        log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
+                            "LHS of operator is either an object or bool. Operation can't be performed".to_string());
+                        has_error = true;
+                    },
+                    _ => ()
                 }
-                
-                if rhs_datatype == Datatype::object {
-                    log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
-                                "RHS of operator is either an object or bool. Operation can't be performed".to_string());
-                    has_error = true;
+
+                // if rhs_datatype == Datatype::object {
+                //     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
+                //                 "RHS of operator is either an object or bool. Operation can't be performed".to_string());
+                //     has_error = true;
+                // }
+                match rhs_datatype {
+                    Datatype::bool|Datatype::object{..} => {
+                        log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
+                            "RHS of operator is either an object or bool. Operation can't be performed.".to_string());
+                        has_error = true;
+                    },
+                    _ => ()
                 }
             },
 
@@ -245,11 +280,11 @@ impl TypeChecker {
             },
 
             TokenType::EQUAL_EQUAL|TokenType::BANG_EQUAL
-            |TokenType::LESS_THAN|TokenType::LESS_EQUAL
+            |TokenType::LESS_THAN |TokenType::LESS_EQUAL
             |TokenType::GREAT_THAN|TokenType::GREAT_EQUAL => {
-                if lhs_datatype == Datatype::object {
-                    // find a way to match object types. Or make this error check after converting to llvm ir.
-                }
+                // if lhs_datatype == Datatype::object {
+                //     // find a way to match object types. Or make this error check after converting to llvm ir.
+                // }
                 return Datatype::bool;
             },
             
@@ -318,17 +353,121 @@ impl TypeChecker {
     }
 
     fn visit_literal_expr(&mut self, value: &mut Token, datatype: &mut Datatype) -> Datatype {
+        // unimplemented!()
         *datatype = Datatype::get_datatype(&value.tok_type);
         return (*datatype).clone();
     }
 
     fn visit_call_expr(&mut self, callee: &mut Box<Expr>, arguments: &mut Vec<Box<Expr>>/*&mut Box<Expr>*/,
                          datatype: &mut Datatype) -> Datatype {
-        unimplemented!()
+        match *callee.clone() {
+            Expr::AttributeRef{name, object, datatype:dt}
+                => {
+                    let mut obj = object.clone();
+                    let dtype = self.visit_expr(&mut *obj);
+                    match dtype {
+                        Datatype::yet_to_infer => return Datatype::yet_to_infer,
+                        Datatype::object{name: obj_name} => {
+                            match self.symbol_table.impl_decls.get(&obj_name) {
+                                Some(Decl::ImplDecl{name, trait_name, funcs}) => {
+                                    // return Datatype::yet_to_infer;
+                                    for func in funcs {
+                                        if let Decl::FuncDef{prototype, block} = *func.clone() {
+                                            if let Decl::Prototype{name:func_name, parameters, returntype}
+                                                = *prototype.clone() {
+                                                    if func_name.value == name.value {
+                                                        *datatype = Datatype::get_tok_datatype(&returntype);
+                                                        return Datatype::get_tok_datatype(&returntype);
+                                                    }
+                                                    return Datatype::yet_to_infer;
+                                                }
+                                        }
+                                    }
+
+                                    log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                                        "Couldn't find implementation for the method. Be sure to define it before using.".to_string());
+                                    return Datatype::yet_to_infer;
+                                },
+                                _ => {
+                                    log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                                        format!("No implementation given for the struct type '{}'", obj_name));
+                                    return Datatype::yet_to_infer;
+                                }
+                            }
+                        }
+                        _ => {
+                            log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                                "Can't have an attribute on types other than objects.".to_string());
+                            return Datatype::yet_to_infer;
+                        }
+                    }
+                },
+
+            Expr::Variable{name, datatype: dt, struct_name}
+                => {
+                    match self.symbol_table.func_table.get(&name.value) {
+                        Some(Decl::FuncDef{prototype, block}) => {
+                            if let Decl::Prototype{name, parameters, returntype} = *prototype.clone() {
+                                *datatype = Datatype::get_tok_datatype(&returntype);
+                                return Datatype::get_tok_datatype(&returntype);
+                            }
+                        },
+                        _ => {
+                            log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                                "Couldn't find specified function. Be sure to define it before using.".to_string());
+                            return Datatype::yet_to_infer;
+                        }
+                    }
+                    return Datatype::yet_to_infer;
+                },
+            _ => {
+                // search in func_table;
+                // let callee_type = self.visit_expr(callee);
+                return Datatype::yet_to_infer;
+            }
+        }
     }
 
     fn visit_attributeref_expr(&mut self, object: &mut Box<Expr>, name: &mut Token, datatype: &mut Datatype) -> Datatype {
-        unimplemented!()
+        let mut attr_name = name;
+        match self.visit_expr(object) {
+            Datatype::object{name} => {
+                match self.symbol_table.struct_decls.get(&name) {
+
+                    Some(Decl::StructDecl{ name:struct_name, fields}) => {
+                    
+                        // check in fields declaration
+                        for field in fields {
+                            if(field.0.value == attr_name.value) {
+                                let mut dtype = Datatype::get_datatype(&field.1.tok_type);
+                                if let Datatype::object{name:n} = dtype {
+                                    dtype = Datatype::object{name:attr_name.value.clone()};
+                                }
+                                *datatype = dtype.clone();
+                                return dtype;
+                            }
+                        }
+                    
+                        // check in impl and traits. 
+                        // probably not needed.
+
+                        log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+                            "Given attribute doesn't exist in the struct.".to_string());
+                    },
+                    _ => {
+                        log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+                            "The struct containing this attribute doesn't seem to be defined yet.".to_string());
+                        return Datatype::yet_to_infer;
+                    }
+                }
+                return Datatype::yet_to_infer;
+            },
+            _ => {
+                log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+                    "Can't use attribute reference on types other than objects".to_string());
+                return Datatype::yet_to_infer;
+            }
+        }
     }
 
     fn visit_variable_expr(&mut self, name: &mut Token, datatype: &mut Datatype, struct_name: &mut Option<String>) -> Datatype {
@@ -341,29 +480,47 @@ impl TypeChecker {
             }
         }
 
-        if *datatype == Datatype::object {
-            match struct_name {
-                Some(strct_name) => {
-                    if self.symbol_table.struct_decls.contains_key(strct_name) {
-                        return Datatype::object;
-                    } else {
-                        logger::log_message(logger::LogLevel::ERROR, 
-                            name.col, name.line, 
-                            format!("Unable to find struct declaration {} for variable {}", 
-                                strct_name, name.value));
+        match *datatype {
+            Datatype::object{..} => {
+                match struct_name {
+                    Some(strct_name) => {
+                        if self.symbol_table.struct_decls.contains_key(strct_name) {
+                            return Datatype::object{name: strct_name.clone()};
+                        }
+                    },
+                    _ => {
+                        log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                            "Variable declared as object but unable to find its struct type".to_string());
                         *datatype = Datatype::yet_to_infer;
                         return Datatype::yet_to_infer;
                     }
-                },
-                _ => {
-                    logger::log_message(logger::LogLevel::ERROR, 
-                        name.col, name.line, 
-                        "variable declared as object but unable to find its struct type".to_string());
-                    *datatype = Datatype::yet_to_infer;
-                    return Datatype::yet_to_infer;
                 }
-            }
+            },
+            _ => ()
         }
+        // if *datatype == Datatype::object {
+        //     match struct_name {
+        //         Some(strct_name) => {
+        //             if self.symbol_table.struct_decls.contains_key(strct_name) {
+        //                 return Datatype::object;
+        //             } else {
+        //                 logger::log_message(logger::LogLevel::ERROR, 
+        //                     name.col, name.line, 
+        //                     format!("Unable to find struct declaration {} for variable {}", 
+        //                         strct_name, name.value));
+        //                 *datatype = Datatype::yet_to_infer;
+        //                 return Datatype::yet_to_infer;
+        //             }
+        //         },
+        //         _ => {
+        //             logger::log_message(logger::LogLevel::ERROR, 
+        //                 name.col, name.line, 
+        //                 "variable declared as object but unable to find its struct type".to_string());
+        //             *datatype = Datatype::yet_to_infer;
+        //             return Datatype::yet_to_infer;
+        //         }
+        //     }
+        // }
 
         return Datatype::yet_to_infer;
     }

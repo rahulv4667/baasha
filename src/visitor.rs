@@ -298,22 +298,30 @@ impl Visitor<()> for Printer {
                     self.print_data("For{{ }}".to_string());
                     self.space_width += 5;
 
-                    self.print_data("Initialization{{ }}".to_string());
-                    self.space_width += 15;
-                    self.visit_expr(initialization);
-                    self.space_width -= 15;
+                    
+                    if let Some(init_expr) = initialization {
+                        self.print_data("Initialization{{ }}".to_string());
+                        self.space_width += 15;
+                        self.visit_expr(init_expr);
+                        self.space_width -= 15;
 
-                    self.print_data("Condition{{ }}".to_string());
-                    self.space_width += 10;
-                    self.visit_expr(condition);
-                    self.space_width -= 10;
-
-                    self.print_data("Updation{{ }}".to_string());
-                    self.space_width += 10;
-                    for expr in updation {
-                        self.visit_expr(expr);
                     }
-                    self.space_width -= 10;
+                    
+                    if let Some(cond) = condition {
+                        self.print_data("Condition{{ }}".to_string());
+                        self.space_width += 10;
+                        self.visit_expr(cond);
+                        self.space_width -= 10;
+                    }
+                    
+
+                    if let Some(update) = updation {
+                        self.print_data("Updation{{ }}".to_string());
+                        self.space_width += 10;
+                        self.visit_expr(update);
+                        self.space_width -= 10;
+                    }
+                    
 
                     self.print_data("Block{{ }}".to_string());
                     self.space_width += 5;
@@ -380,7 +388,8 @@ impl Visitor<()> for Printer {
                     self.space_width -= 6;
                 },
 
-            Decl::Prototype{name, parameters, returntypes}
+            // Decl::Prototype{name, parameters, returntypes}
+            Decl::Prototype{name, parameters, returntype}
                 => {
                     self.print_data(format!("Prototype{{ Name:{:?} }}", name));
 
@@ -392,10 +401,10 @@ impl Visitor<()> for Printer {
                     self.space_width -= 10;
 
                     self.space_width += 10;
-                    self.print_data("ReturnTypes{{ }}".to_string());
-                    for typ in returntypes {
-                        self.print_data(format!("Type:{:?}", typ));
-                    }
+                    self.print_data(format!("ReturnType{{ {:?} }}", returntype));
+                    // for typ in returntypes {
+                    //     self.print_data(format!("Type:{:?}", typ));
+                    // }
                     self.space_width -= 10;
                 },
 

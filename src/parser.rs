@@ -7,11 +7,18 @@ use crate::{ast::*, logger};
 use crate::globals::TokenType;
 use crate::lexer::Token;
 
+#[allow(dead_code, non_camel_case_types)]
+#[derive(PartialEq)]
+enum Restriction {
+    STRUCT_EXPR
+}
+
 #[allow(dead_code)]
 pub struct Parser {
     current: usize,
     start: usize,
-    tokens: Vec<Token>
+    tokens: Vec<Token>,
+    restrictions: Vec<Restriction>
 }
 
 #[allow(dead_code)]
@@ -387,27 +394,28 @@ impl Parser {
         }
 
         // reading return types
-        let mut ret_types: Vec<Token> = vec![];
+        // let mut ret_types: Vec<Token> = vec![];
+        let mut returntype: Token = Token { tok_type: TokenType::ERROR, value: String::new(), line: usize::MAX, col: usize::MAX };
         if self.match_(TokenType::RIGHT_ARROW) {
             
             match self.consume_multi(TokenType::get_datatypes(), 
             "Expected a return type".to_string()) {
-                Some(tok) => ret_types.push(tok),
+                Some(tok) => returntype = tok,//ret_types.push(tok),
                 _ => return None,
             }
 
-            while self.match_(TokenType::COMMA) {
-                match self.consume_multi(TokenType::get_datatypes(), 
-                "Expected a return type".to_string()) {
-                    Some(tok) => ret_types.push(tok),
-                    _ => return None,
-                }
-            }
+            // while self.match_(TokenType::COMMA) {
+            //     match self.consume_multi(TokenType::get_datatypes(), 
+            //     "Expected a return type".to_string()) {
+            //         Some(tok) => ret_types.push(tok),
+            //         _ => return None,
+            //     }
+            // }
 
         }
 
 
-        return Some(Box::new(Decl::Prototype{name, parameters: params, returntypes: ret_types}));
+        return Some(Box::new(Decl::Prototype{name, parameters: params, returntype/*ret_types*/}));
     }
 
     fn block(&mut self) -> Option<Box<Stmt>> { 
@@ -495,10 +503,12 @@ impl Parser {
         self.consume(TokenType::K_IF, "Expected 'if' statement".to_string());
 
         let condition: Box<Expr>;
+        self.restrictions.push(Restriction::STRUCT_EXPR);
         match self.expression() {
             Some(expr) => condition = expr,
             _ => return None,
         }
+        self.restrictions.pop();
 
         let then_block: Box<Stmt>;
         match self.block() {
@@ -540,7 +550,79 @@ impl Parser {
     }
 
     
-    fn for_stmt(&self) -> Option<Box<Stmt>> { unimplemented!() }
+    fn for_stmt(&mut self) -> Option<Box<Stmt>> { 
+        println!("In for stmt()");
+        self.consume(TokenType::K_FOR, "Expected 'for' keyword".to_string());
+
+        self.restrictions.push(Restriction::STRUCT_EXPR);
+        let mut condition: Box<Expr>;
+        let has_condition:bool;
+        match self.expression() {
+            Some(expr) => condition = expr,
+            _ => {
+                self.restrictions.pop();
+                if let Some(blk) = self.block() {
+                    return Some(Box::new(Stmt::For{initialization:None, condition: None, updation: None, block: blk}));
+                } 
+                return None;
+            }
+        }
+
+        if self.match_(TokenType::SEMICOLON) {
+            let initialization = condition.clone();
+            // has_condition = false;
+            match self.expression() {
+                Some(expr) => { 
+                    has_condition = true;
+                    condition = expr;
+                }
+                _ => {
+                    has_condition = false;
+                }
+            }
+
+            if self.match_(TokenType::SEMICOLON) {
+                let updation: Box<Expr>;
+                match self.expression() {
+                    Some(expr) => {
+                        updation = expr;
+                        self.restrictions.pop();
+                        if let Some(blk) = self.block() {
+                            return Some(
+                                Box::new(
+                                    Stmt::For{
+                                        initialization:Some(initialization),
+                                        condition: if has_condition { Some(condition) } else {None},
+                                        updation: Some(updation),
+                                        block: blk
+                                    }
+                                )
+                            );
+                        } else {
+                            return None;
+                        }
+                        
+                    },
+                    _ => {
+                        log_message(logger::LogLevel::ERROR, self.tokens[self.current].col, self.tokens[self.current].line, 
+                            "Expected expression after second ';' in `for` loop".to_string());
+                        self.synchronize();
+                        return None;
+                    }
+                }
+            }
+        }
+        self.restrictions.pop();
+        if let Some(blk) = self.block() {
+            return Some(Box::new(Stmt::For{
+                initialization: None,
+                condition: Some(condition),
+                updation: None,
+                block: blk
+            }));
+        }
+        return None;    
+    }
 
 
     fn return_stmt(&mut self) -> Option<Box<Stmt>> { 
@@ -1114,6 +1196,11 @@ impl Parser {
             if peek.tok_type == TokenType::BRACKET_OPEN                          { return self.grouping(); }
             else if TokenType::get_literal_types().contains(&peek.tok_type)      { return self.literal(); }
             else if peek.tok_type == TokenType::IDENTIFIER {
+
+                if self.restrictions.contains(&Restriction::STRUCT_EXPR) {
+                    return self.variable();
+                }
+
                 // check if it could be a struct-expr
                 if let Some(next_peek) = self.peek_next() {
                    if next_peek.tok_type == TokenType::CURLY_OPEN {
@@ -1175,9 +1262,11 @@ impl Parser {
         match self.consume(TokenType::CURLY_OPEN, 
             "Expected '{' after identifier in struct expression".to_string()) {
                 Some(_) => (),
-                _ => return None,
+                _ => return Some(Box::new(Expr::Variable{name, datatype: Datatype::yet_to_infer, struct_name: None}))
+                // _ => return None,
         }
 
+        
         let mut fields: Vec<(Token, Box<Expr>)> = vec![];
         while !self.match_(TokenType::CURLY_CLOSE) {
             let field_name: Token;
@@ -1187,11 +1276,18 @@ impl Parser {
                 "Expected field name in struct expression".to_string()) {
                     Some(tok) => field_name = tok,
                     _ => return None,
+                    // _ => {
+                    //     while self.curr() == Some(name) {
+                    //         self.current-=1;
+                    //     }
+                    //     return Some(Box::new(Expr::Variable{name, datatype: Datatype::yet_to_infer, struct_name: None}));
+                    // }
             }
 
             match self.consume(TokenType::COLON, 
                 "Expected ':' after field name in struct expression".to_string()) {
                     Some(_) => (),
+                    // _ => return Some(Box::new(Expr::Variable{name, datatype: Datatype::yet_to_infer, struct_name: None}))
                     _ => return None,
             }
 
@@ -1199,7 +1295,8 @@ impl Parser {
                 Some(expr) => field_value = expr,
                 _ => {
                     self.synchronize();
-                    return None;
+                    // return None;
+                    return Some(Box::new(Expr::Variable{name, datatype: Datatype::yet_to_infer, struct_name: None}));
                 }
             }
 
@@ -1246,6 +1343,6 @@ impl Parser {
     }
 
     pub fn new() -> Self {
-        Parser { current: 0, start: 0, tokens: vec![] }
+        Parser { current: 0, start: 0, tokens: vec![], restrictions: vec![] }
     }
 }

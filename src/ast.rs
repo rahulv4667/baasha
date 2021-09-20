@@ -6,11 +6,20 @@ use crate::globals::TokenType;
 pub enum Datatype {
     int8, int16, int32, int64,
     uint8, uint16, uint32, uint64,
-    float32, float64, bool, object,
+    float32, float64, bool, object{name: String},
     string, yet_to_infer
 }
 
 impl Datatype {
+
+    #[allow(dead_code)]
+    pub fn get_tok_datatype(tok: &Token) -> Self {
+        if let Datatype::object{..} = Datatype::get_datatype(&tok.tok_type) {
+            return Datatype::object{name: tok.value.clone()};
+        }
+        return Datatype::get_datatype(&tok.tok_type);
+    }
+
     #[allow(dead_code)]
     pub fn get_datatype(tok_type: &TokenType) -> Self {
         return match tok_type {
@@ -30,6 +39,7 @@ impl Datatype {
             TokenType::OCTAL_LITERAL => Datatype::int64,
             TokenType::STRING_LITERAL => Datatype::string,
             TokenType::FLOAT_LITERAL => Datatype::float64,
+            TokenType::IDENTIFIER => Datatype::object{name: String::new()},
             _ => Datatype::yet_to_infer
         };
     }
@@ -62,7 +72,7 @@ impl Datatype {
 
 
 #[allow(non_camel_case_types,dead_code)]
-#[derive(Debug)]
+#[derive(Debug,Clone, Copy)]
 pub enum Primary_Type {
     Hex_literal,
     Octal_literal,
@@ -79,7 +89,7 @@ pub enum Primary_Type {
 #[allow(dead_code)]
 #[derive(Debug,Clone)]
 pub enum Decl {
-    Prototype   {name:Token, parameters: Vec<(Token/*name*/, Token/*datatype*/)>, returntypes: Vec<Token>},
+    Prototype   {name:Token, parameters: Vec<(Token/*name*/, Token/*datatype*/)>, returntype: /*Vec<Token>*/Token},
     FuncDef     {prototype: Box<Decl>/*Prototype*/, block: Box<Stmt>/*Block*/},
     // FuncDecl    {prototype}
     StructDecl  {name: Token, fields: Vec<(Token/*name*/, Token/*datatype*/)>},
@@ -97,9 +107,9 @@ pub enum Stmt {
     Block   {statements: Vec<Box<Stmt>>},
     Return  {expr: Box<Expr>},
     While   {condition: Box<Expr>, block: Box<Stmt>},
-    For     {initialization: Box<Expr> /*should be Assignment */, 
-                condition: Box<Expr>, 
-                updation: Vec<Box<Expr>>, 
+    For     {initialization: Option<Box<Expr>> /*should be Assignment */, 
+                condition: Option<Box<Expr>>, 
+                updation: Option<Box<Expr>>, 
                 block: Box<Stmt>},  
     Expression  {expr: Box<Expr>},
     Decl    { decl: Box<Decl> },
