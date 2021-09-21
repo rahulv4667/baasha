@@ -27,30 +27,99 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                     self.visit_decl(prototype);
 
                     /* storing environment so that local variables dont affect the original env */
-                    let pre_environment = self.symbol_table.clone();
+                    // let pre_environment = self.symbol_table.clone();
                     self.visit_stmt(block);
-                    self.symbol_table = pre_environment;
+                    // self.symbol_table = pre_environment;
                 },
-            // Decl::Prototype{name, parameters, returntypes}
-            //     => {
-            //         self.symbol_table.func_table.insert(name.value.clone(), 
-            //             Decl::Prototype{name: name.clone(), parameters: parameters.clone(), 
-            //                     returntypes: returntypes.clone()});
-            //         for param in parameters {
-            //             self.symbol_table.variable_table.insert(param.0.value.clone(), param.1.clone());
-            //         }
-            //     },
+            Decl::Prototype{name, parameters, returntype}
+                => {
+                    self.symbol_table.func_table.insert(name.value.clone(), 
+                        Decl::Prototype{name: name.clone(), parameters: parameters.clone(), 
+                                returntype: returntype.clone()});
+                    for param in parameters {
+                        self.symbol_table.variable_table.insert(param.0.value.clone(), Datatype::get_tok_datatype(&param.1));
+                    }
+                },
             /////////////////////////////////////////////////////////////
             // Decl::ImplDecl{name, trait_name, funcs}
-            //     => {
-
-            //     },
-            _ => ()
+            Decl::ImplDecl{name, funcs, ..}
+                => {
+                    (*self.symbol_table.impl_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
+                },
+            Decl::TraitDecl{name, funcs}
+                => {
+                    (*self.symbol_table.trait_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
+                },
+            // _ => ()
         }
     }
     
     fn visit_stmt(&mut self, stmt: &mut Stmt) {
         match stmt {
+            Stmt::Block{statements} => {
+                let pre_environment = self.symbol_table.clone();
+                for statement in statements {
+                    self.visit_stmt(statement);
+                }
+                self.symbol_table = pre_environment;
+            },
+            Stmt::Decl{decl} => self.visit_decl(decl),
+            Stmt::Expression{expr} => {self.visit_expr(expr);},
+            Stmt::For{
+                for_token,
+                initialization, 
+                condition, 
+                updation, 
+                block}
+                => {
+                    if let Some(init_expr) = initialization {
+                        self.visit_expr(init_expr);
+                    }
+
+                    if let Some(cond) = condition {
+                        if self.visit_expr(cond) != Datatype::bool {
+                            log_message(logger::LogLevel::ERROR, 
+                                for_token.col, for_token.line, 
+                                "Condition expression of `for` should be of type `bool`".to_string());
+                        }
+                    }
+
+                    if let Some(update) = updation {
+                        self.visit_expr(update);
+                    }
+
+                    self.visit_stmt(block);
+                },
+            Stmt::If{if_token, condition, then_block, else_block} 
+                => {
+                    if self.visit_expr(condition) != Datatype::bool {
+                        log_message(logger::LogLevel::ERROR, 
+                            if_token.col, if_token.line, 
+                            "Condition expression of `if` should be of type `bool`".to_string());
+                    }   
+                    self.visit_stmt(then_block);
+                    if let Some(else_blk) = else_block {
+                        self.visit_stmt(else_blk);
+                    }
+                },
+            Stmt::Return{expr} => {self.visit_expr(expr);},
+            Stmt::Var{name, datatype, initialization_value}
+                => {
+                    let mut dtype: Datatype = Datatype::yet_to_infer;
+                    if let Some(init_value) = initialization_value {
+                        dtype = self.visit_expr(init_value);
+                    }
+
+                    if let Some(dttype) = datatype {
+                        dtype = Datatype::get_tok_datatype(dttype);
+                    }
+
+                    // println!("Variable declared: ")
+                    self.symbol_table.variable_table.insert(name.value.clone(), dtype);
+                    // self.symbol_table.variable_table[&name.value] = dtype;
+                },
+            // Stmt::While{condition, block}
+            //     => (),
             _ => ()
         }
     }
@@ -76,18 +145,20 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
             Expr::Assignment{target, expr, operator, datatype}
                 => self.visit_assignment_expr(target, expr, operator, datatype),
                 // => self.visit_assignment_expr(target_list, expr_list, datatype),
-            Expr::Grouping{expr}
-                => self.visit_grouping_expr(expr),
-            Expr::Cast{variable, cast_type} 
-                => self.visit_cast_expr(variable, cast_type),
-            _ => {return Datatype::yet_to_infer;}
+            Expr::Grouping{expr, datatype}
+                => self.visit_grouping_expr(expr, datatype),
+            Expr::Cast{variable, cast_type, datatype} 
+                => self.visit_cast_expr(variable, cast_type, datatype),
+            Expr::ExprList{expr_list, datatype}
+                => self.visit_exprlist_expr(expr_list, datatype),
+            // _ => {return Datatype::yet_to_infer;}
         }
     }
 }
 
 #[allow(dead_code, unused)]
 impl TypeChecker {
-    fn visit_cast_expr(&mut self, variable: &mut Box<Expr>, casttype: &mut Token) -> Datatype {
+    fn visit_cast_expr(&mut self, variable: &mut Box<Expr>, casttype: &mut Token, datatype: &mut Datatype) -> Datatype {
         let var_type = self.visit_expr(variable);
         let mut cast_type = Datatype::get_datatype(&casttype.tok_type);
         if let Datatype::object{..} = cast_type {
@@ -98,6 +169,7 @@ impl TypeChecker {
                 // casttype doesnt exist.
                 log_message(logger::LogLevel::ERROR, casttype.col, casttype.line, 
                     "Given cast type doesn't exist. Make sure to declare structs before using.".to_string());
+                *datatype = var_type.clone();
                 return var_type;
             }
         }
@@ -105,18 +177,20 @@ impl TypeChecker {
         // if both are objects, check if they are castable while converting to LLVM IR by matching 
 
 
-        if var_type == Datatype::yet_to_infer { return Datatype::yet_to_infer; }
+        if var_type == Datatype::yet_to_infer { 
+            *datatype = var_type;
+            return Datatype::yet_to_infer; 
+        }
+        *datatype = cast_type.clone();
         return cast_type.clone();
     }
 
-    fn visit_grouping_expr(&mut self, expr: &mut Box<Expr>) -> Datatype {
-        return self.visit_expr(expr);
+    fn visit_grouping_expr(&mut self, expr: &mut Box<Expr>, datatype: &mut Datatype) -> Datatype {
+        *datatype = self.visit_expr(expr);
+        return (*datatype).clone();
     }
 
-    // fn visit_assignment_expr(&mut self, target_list: &mut Vec<Box<Expr>>, 
-    //                         expr_list: &mut Vec<Box<Expr>>, datatype:&mut Datatype) -> Datatype {
-    //     unimplemented!()
-    // }
+
     fn visit_assignment_expr(&mut self, target: &mut Box<Expr>, 
                 expr: &mut Box<Expr>, operator: &mut Token, datatype: &mut Datatype) -> Datatype {
                     
@@ -212,7 +286,7 @@ impl TypeChecker {
     fn visit_binary_expr(&mut self, lhs:&mut Box<Expr>, rhs: &mut Box<Expr>, operator: &mut Token, datatype: &mut Datatype) -> Datatype {
         let lhs_datatype: Datatype = self.visit_expr(lhs);
         let rhs_datatype: Datatype = self.visit_expr(rhs);
-
+        println!("Binary expr :::: Lhs type: {:?}, Rhs type: {:?}", lhs_datatype, rhs_datatype);
         if lhs_datatype == Datatype::yet_to_infer || rhs_datatype == Datatype::yet_to_infer {
             return Datatype::yet_to_infer;
         }
@@ -355,6 +429,7 @@ impl TypeChecker {
     fn visit_literal_expr(&mut self, value: &mut Token, datatype: &mut Datatype) -> Datatype {
         // unimplemented!()
         *datatype = Datatype::get_datatype(&value.tok_type);
+        println!("Literal expr type: {:?}", *datatype);
         return (*datatype).clone();
     }
 
@@ -368,8 +443,9 @@ impl TypeChecker {
                     match dtype {
                         Datatype::yet_to_infer => return Datatype::yet_to_infer,
                         Datatype::object{name: obj_name} => {
+                            
                             match self.symbol_table.impl_decls.get(&obj_name) {
-                                Some(Decl::ImplDecl{name, trait_name, funcs}) => {
+                                Some(funcs) => {
                                     // return Datatype::yet_to_infer;
                                     for func in funcs {
                                         if let Decl::FuncDef{prototype, block} = *func.clone() {
@@ -472,7 +548,11 @@ impl TypeChecker {
 
     fn visit_variable_expr(&mut self, name: &mut Token, datatype: &mut Datatype, struct_name: &mut Option<String>) -> Datatype {
         match self.symbol_table.variable_table.get(&name.value) {
-            Some(dtype) => *datatype = Datatype::get_datatype(&dtype.tok_type),
+            Some(dtype) => {
+                *datatype = (*dtype).clone();
+                println!("Variable datatype: {:?}", *datatype);
+                return (*datatype).clone();
+            },
             _ => {
                 logger::log_message(logger::LogLevel::ERROR, 
                     name.col, name.line, format!("Undefined variable '{}'", name.value));
@@ -498,30 +578,14 @@ impl TypeChecker {
             },
             _ => ()
         }
-        // if *datatype == Datatype::object {
-        //     match struct_name {
-        //         Some(strct_name) => {
-        //             if self.symbol_table.struct_decls.contains_key(strct_name) {
-        //                 return Datatype::object;
-        //             } else {
-        //                 logger::log_message(logger::LogLevel::ERROR, 
-        //                     name.col, name.line, 
-        //                     format!("Unable to find struct declaration {} for variable {}", 
-        //                         strct_name, name.value));
-        //                 *datatype = Datatype::yet_to_infer;
-        //                 return Datatype::yet_to_infer;
-        //             }
-        //         },
-        //         _ => {
-        //             logger::log_message(logger::LogLevel::ERROR, 
-        //                 name.col, name.line, 
-        //                 "variable declared as object but unable to find its struct type".to_string());
-        //             *datatype = Datatype::yet_to_infer;
-        //             return Datatype::yet_to_infer;
-        //         }
-        //     }
-        // }
-
         return Datatype::yet_to_infer;
+    }
+
+    fn visit_exprlist_expr(&mut self, expr_list: &mut Vec<Box<Expr>>, datatype: &mut Datatype) -> Datatype {
+        for expr in expr_list {
+            *datatype = self.visit_expr(expr);
+            println!("Exprlist type: {:?}", *datatype);
+        }
+        return (*datatype).clone();
     }
 }

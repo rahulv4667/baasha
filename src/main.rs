@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::process;
@@ -14,6 +15,9 @@ use lexer::Lexer;
 use parser::Parser;
 use visitor::Printer;
 
+use crate::symbol_table::SymbolTable;
+use crate::type_check_visitor::TypeChecker;
+use crate::visitor::MutableVisitor;
 // use crate::globals::TokenType;
 use crate::visitor::Visitor;
 
@@ -44,8 +48,32 @@ fn main()  {
 
     println!("Declarations: {}", declarations.len());
     let mut printer: Printer = Printer{space_width: 0};
-    for decl in declarations {
-        printer.visit_decl(&decl);
+    for decl in &declarations {
+        printer.visit_decl(decl);
         // println!("Decl: {:?}", *decl);
     }
+
+    println!("*****************************************************************************************************");
+    println!("*****************************************************************************************************");
+    println!("*****************************************************************************************************");
+    println!("*****************************************************************************************************");
+    println!("*****************************************************************************************************");
+    let mut type_checker: TypeChecker = TypeChecker { 
+        symbol_table: SymbolTable{
+            variable_table: HashMap::new(),
+            struct_decls: HashMap::new(),
+            impl_decls: HashMap::new(),
+            trait_decls: HashMap::new(),
+            func_table: HashMap::new()
+        } 
+    };
+    let mut decls = declarations.clone();
+    for decl in &mut decls {
+        type_checker.visit_decl(decl);
+    }
+
+    for decl in &decls {
+        printer.visit_decl(decl);
+    }
+    
 }

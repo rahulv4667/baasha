@@ -8,5 +8,12 @@ func main() -> int32  {
     //a = x.b();
     //if b {} else {}
     //for x = 10; x<10;x*=2 {  }
-    for x = 10 {}
+    
+    //var x: int32 = 0;
+    //var y: int32 = 1;
+    //var z = (x + y);
+    //if z == (x+y) {}
+    
+    var x: hello;
+    for (x.x as int64) == 10 {}
 }

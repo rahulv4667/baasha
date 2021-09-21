@@ -162,24 +162,24 @@ impl Visitor<()> for Printer {
                     self.space_width -= 13;
                 },
             
-            Expr::Grouping { expr} 
+            Expr::Grouping { expr, datatype} 
                 => {
-                    self.print_data("Grouping{{ }}".to_string());
+                    self.print_data(format!("Grouping{{ }}, Datatype: {:?}", datatype));
                     self.space_width += 10;
                     self.visit_expr(&expr);
                     self.space_width -= 10;
                 },
 
-            Expr::Cast { variable, cast_type} 
+            Expr::Cast { variable, cast_type, datatype} 
                 => {
-                    self.print_data(format!("Cast{{ cast_to: {:?} }}", cast_type));
+                    self.print_data(format!("Cast{{ cast_to: {:?} }}, Datatype: {:?}", cast_type, datatype));
                     self.space_width += 5;
                     self.visit_expr(&variable);
                     self.space_width -= 5;
                 },
-            Expr::ExprList{expr_list}
+            Expr::ExprList{expr_list, datatype}
                 => {
-                    self.print_data("Expression list{{ }}".to_string());
+                    self.print_data(format!("Expression List{{ }}, Datatype: {:?}", datatype));
                     self.space_width += 13;
                     let mut i: usize = 0;
                     while i < expr_list.len() {
@@ -267,7 +267,7 @@ impl Visitor<()> for Printer {
                     self.space_width -= 10;
                 },
 
-            Stmt::If{condition, then_block, else_block}
+            Stmt::If{condition, then_block, else_block, ..}
                 => {
                     self.print_data("If{{ }}".to_string());
                     self.space_width += 5;
@@ -293,7 +293,7 @@ impl Visitor<()> for Printer {
                     self.space_width -= 5;
                 },
 
-            Stmt::For{initialization, condition, updation, block}
+            Stmt::For{initialization, condition, updation, block, ..}
                 => {
                     self.print_data("For{{ }}".to_string());
                     self.space_width += 5;

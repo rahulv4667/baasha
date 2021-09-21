@@ -301,7 +301,8 @@ impl Parser {
         let mut funcs: Vec<Box<Decl>> = Vec::new();
         while !self.match_(TokenType::CURLY_CLOSE) {
             match self.consume(TokenType::K_FUNC, 
-                "Expected function definition/declaration inside trait declaration".to_string()) {
+                "Expected function definition inside trait declaration.
+                             Unlike `Rust`, `Baasha` expects a default implementation.".to_string()) {
                     Some(_) => {
 
                         match self.func() {
@@ -500,7 +501,11 @@ impl Parser {
 
     fn if_stmt(&mut self) -> Option<Box<Stmt>> { 
         println!("In if_stmt()");
-        self.consume(TokenType::K_IF, "Expected 'if' statement".to_string());
+        let if_token:Token;
+        match self.consume(TokenType::K_IF, "Expected `if` statement".to_string()) {
+            Some(tok) => if_token = tok,
+            _ => return None
+        }
 
         let condition: Box<Expr>;
         self.restrictions.push(Restriction::STRUCT_EXPR);
@@ -526,7 +531,7 @@ impl Parser {
             else_block = None;
         }
 
-        return Some(Box::new(Stmt::If{condition, then_block, else_block}));
+        return Some(Box::new(Stmt::If{if_token, condition, then_block, else_block}));
 
     }
 
@@ -552,7 +557,11 @@ impl Parser {
     
     fn for_stmt(&mut self) -> Option<Box<Stmt>> { 
         println!("In for stmt()");
-        self.consume(TokenType::K_FOR, "Expected 'for' keyword".to_string());
+        let for_token: Token;
+        match self.consume(TokenType::K_FOR, "Expected 'for' keyword".to_string()) {
+            Some(tok) => for_token = tok,
+            _ => return None
+        }
 
         self.restrictions.push(Restriction::STRUCT_EXPR);
         let mut condition: Box<Expr>;
@@ -562,7 +571,7 @@ impl Parser {
             _ => {
                 self.restrictions.pop();
                 if let Some(blk) = self.block() {
-                    return Some(Box::new(Stmt::For{initialization:None, condition: None, updation: None, block: blk}));
+                    return Some(Box::new(Stmt::For{for_token, initialization:None, condition: None, updation: None, block: blk}));
                 } 
                 return None;
             }
@@ -591,6 +600,7 @@ impl Parser {
                             return Some(
                                 Box::new(
                                     Stmt::For{
+                                        for_token,
                                         initialization:Some(initialization),
                                         condition: if has_condition { Some(condition) } else {None},
                                         updation: Some(updation),
@@ -615,6 +625,7 @@ impl Parser {
         self.restrictions.pop();
         if let Some(blk) = self.block() {
             return Some(Box::new(Stmt::For{
+                for_token,
                 initialization: None,
                 condition: Some(condition),
                 updation: None,
@@ -696,7 +707,7 @@ impl Parser {
             }
         } 
         
-        return Some(Box::new(Expr::ExprList{expr_list}));
+        return Some(Box::new(Expr::ExprList{expr_list, datatype: Datatype::yet_to_infer}));
         
         // return self.logical_OR_expr();
     }
@@ -1177,7 +1188,7 @@ impl Parser {
                 println!("In primary loop: casting");
                 match self.consume_multi(TokenType::get_datatypes(), 
                 "Expected a datatype after 'as' keyword for type casting".to_string()) {
-                    Some(tok) => atom = Box::new(Expr::Cast{variable:atom, cast_type: tok}),
+                    Some(tok) => atom = Box::new(Expr::Cast{variable:atom, cast_type: tok, datatype: Datatype::yet_to_infer}),
                     _ => return Some(atom)
                 }
             } else {
@@ -1217,6 +1228,7 @@ impl Parser {
 
     fn grouping(&mut self) -> Option<Box<Expr>> { 
         println!("In grouping()");
+        let mut group: Option<Box<Expr>> = None;
         match self.consume(TokenType::BRACKET_OPEN, 
             "Expected '(' at the starting of paranthesized expression".to_string()) {
                 Some(_) => (),
@@ -1224,12 +1236,12 @@ impl Parser {
         }
 
         match self.expression() {
-            Some(expr) => return Some(Box::new(Expr::Grouping{expr})),
+            Some(expr) => group = Some(Box::new(Expr::Grouping{expr, datatype: Datatype::yet_to_infer})),
             _ => (),
         }
 
         self.consume(TokenType::BRACKET_CLOSE, "Expected ')' at the end of paranthesized expression".to_string());
-        return None;
+        return group;
     }
 
     fn variable(&mut self) -> Option<Box<Expr>> { 

@@ -101,13 +101,15 @@ pub enum Decl {
 #[allow(dead_code)]
 #[derive(Debug,Clone)]
 pub enum Stmt {
-    If      {condition: Box<Expr>, 
+    If      {   if_token: Token,
+                condition: Box<Expr>, 
                 then_block: Box<Stmt>, /* Should be Block */
                 else_block: Option<Box<Stmt>> /*Else block could be an if statement*/},
     Block   {statements: Vec<Box<Stmt>>},
     Return  {expr: Box<Expr>},
     While   {condition: Box<Expr>, block: Box<Stmt>},
-    For     {initialization: Option<Box<Expr>> /*should be Assignment */, 
+    For     {   for_token: Token,
+                initialization: Option<Box<Expr>> /*should be Assignment */, 
                 condition: Option<Box<Expr>>, 
                 updation: Option<Box<Expr>>, 
                 block: Box<Stmt>},  
@@ -130,7 +132,7 @@ pub enum Expr {
     // Assignment  {target_list: Vec<Box<Expr>>, /*Expr=Expr::Identifier */
     //     expr_list: Vec<Box<Expr>>, datatype: Datatype},
     Assignment  {target: Box<Expr>, operator: Token, expr: Box<Expr>, datatype: Datatype},
-    Grouping    { expr: Box<Expr> },
-    Cast        { variable: Box<Expr>, cast_type: Token},
-    ExprList    { expr_list: Vec<Box<Expr>>}
+    Grouping    { expr: Box<Expr>, datatype: Datatype },
+    Cast        { variable: Box<Expr>, cast_type: Token, datatype: Datatype},
+    ExprList    { expr_list: Vec<Box<Expr>>, datatype: Datatype}
 }
