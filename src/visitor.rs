@@ -10,13 +10,22 @@ use crate::ast::*;
 //     fn accept<V: Visitor>(&self, visitor: &mut V)   -> V::Result;
 // }
 
-pub trait Visitor<T> {
+pub trait Visitor<D, S, E> {
     // type Result;
 
-    fn visit_stmt(&mut self, stmt: &Stmt)   -> T;
-    fn visit_expr(&mut self, expr: &Expr)   -> T;
-    fn visit_decl(&mut self, decl: &Decl)   -> T;
+    fn visit_stmt(&mut self, stmt: &Stmt)   -> S;
+    fn visit_expr(&mut self, expr: &Expr)   -> E;
+    fn visit_decl(&mut self, decl: &Decl)   -> D;
 }
+
+pub trait VisitorWithLifeTime<D, S, E> {
+    // type Result;
+
+    fn visit_stmt(&mut self, stmt: &Stmt)   -> S;
+    fn visit_expr(&mut self, expr: &Expr)   -> E;
+    fn visit_decl(&mut self, decl: &Decl)   -> D;
+}
+
 
 pub trait MutableVisitor<D, S, E> {
     fn visit_stmt(&mut self, stmt: &mut Stmt) -> S;
@@ -62,7 +71,7 @@ impl Printer {
 }
 
 // return type tells how many tabs it needs to go in
-impl Visitor<()> for Printer {
+impl Visitor<(), (), ()> for Printer {
     
     fn visit_expr(&mut self, expr: &Expr) {
 
@@ -79,9 +88,14 @@ impl Visitor<()> for Printer {
                     }
                 },
 
-            Expr::AttributeRef {object, name, datatype}
+            Expr::AttributeRef {object, name, object_dtype, datatype}
                 => {
-                    self.print_data(format!("Get{{ object, Name:{:?}, Datatype: {:?} }}", name, datatype));
+                    self.print_data(format!(
+                        "Get{{ object_type {:?}, Name:{:?}, Datatype: {:?} }}", 
+                        object_dtype, 
+                        name, 
+                        datatype
+                    ));
                     self.space_width += 6;
                     self.visit_expr(object);
                     self.space_width -= 6;
@@ -170,9 +184,10 @@ impl Visitor<()> for Printer {
                     self.space_width -= 10;
                 },
 
-            Expr::Cast { variable, cast_type, datatype} 
+            Expr::Cast { variable, cast_type, from_dtype,  to_dtype} 
                 => {
-                    self.print_data(format!("Cast{{ cast_to: {:?} }}, Datatype: {:?}", cast_type, datatype));
+                    self.print_data(format!("Cast{{ cast_to: {:?} }}, From: {:?} To: {:?}", 
+                                    cast_type, from_dtype, to_dtype));
                     self.space_width += 5;
                     self.visit_expr(&variable);
                     self.space_width -= 5;
@@ -370,7 +385,7 @@ impl Visitor<()> for Printer {
                     self.space_width += 10;
                     self.visit_decl(prototype);
                     self.visit_stmt(block);
-                    self.space_width += 10;
+                    self.space_width -= 10;
                 },
 
             Decl::ImplDecl{name, trait_name, funcs}

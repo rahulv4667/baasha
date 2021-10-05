@@ -270,6 +270,7 @@ impl Lexer {
             "struct"        => TokenType::K_STRUCT,
 
             "true"          => TokenType::K_TRUE,
+            "trait"         => TokenType::K_TRAIT,
 
             "uint8"         => TokenType::K_UINT8,
             "uint16"        => TokenType::K_UINT16,

@@ -1,5 +1,32 @@
 struct hello {
-    x: int32
+    x: int32,
+    y: int64
+}
+
+trait hell {
+    func newhell() -> int32 {
+        return 0;
+    }
+}
+
+impl hello {
+    func new(y: int32) -> int32 {
+        return y;
+    }
+
+    func new2() -> int32 {
+        return 10;
+    }
+}
+
+impl hell for hello {
+    func newhell() -> int32 {
+        return 20;
+    }
+}
+
+func main2() -> int32 {
+    return 10;
 }
 
 func main() -> int32  {
@@ -14,6 +41,25 @@ func main() -> int32  {
     //var z = (x + y);
     //if z == (x+y) {}
     
-    var x: hello;
-    for (x.x as int64) == 10 {}
+    var y: int32;
+    var z: int64;
+    var x: hello = hello{x: y, y: z};
+    x.new();
+    main2();
+    
+    //hello{x:y, y:z};
+    
+    
+    //x.x = 10;
+    //x.y;
+    //var y: int32;
+    //var z: int32;
+    //var a: int32;
+    //a = 10;
+    //a = y+z;
+    //a += y;
+
+    //main2();
+    //a = y + z;
+    //for (x.x as int64) == 10 {}
 }

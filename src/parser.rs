@@ -151,7 +151,7 @@ impl Parser {
         else if self.match_(TokenType::K_IMPL)      { return self.impl_declaration(); }
         else if self.match_(TokenType::K_TRAIT)     { return self.trait_declaration(); }
         else if self.match_(TokenType::K_FUNC)      { return self.func(); }
-        else { return None; }
+        else { self.synchronize(); return None; }
     }
 
     // structDecl -> "struct" IDENTIFIER "{" (IDENTIFIER ("," IDENTIFIER)*) ":" TYPES "}"
@@ -396,7 +396,7 @@ impl Parser {
 
         // reading return types
         // let mut ret_types: Vec<Token> = vec![];
-        let mut returntype: Token = Token { tok_type: TokenType::ERROR, value: String::new(), line: usize::MAX, col: usize::MAX };
+        let /*mut*/ returntype: Token;// = Token { tok_type: TokenType::ERROR, value: String::new(), line: usize::MAX, col: usize::MAX };
         if self.match_(TokenType::RIGHT_ARROW) {
             
             match self.consume_multi(TokenType::get_datatypes(), 
@@ -404,6 +404,8 @@ impl Parser {
                 Some(tok) => returntype = tok,//ret_types.push(tok),
                 _ => return None,
             }
+
+            return Some(Box::new(Decl::Prototype{name, parameters: params, returntype/*ret_types*/}));
 
             // while self.match_(TokenType::COMMA) {
             //     match self.consume_multi(TokenType::get_datatypes(), 
@@ -413,10 +415,16 @@ impl Parser {
             //     }
             // }
 
+        } else {
+            // For now generating error. In future, should default to '()' type.
+            log_message(logger::LogLevel::ERROR, name.col, name.line, 
+                "A return type needs to be provided in prototype of function".to_string());
+            // self.synchronize();
+            return None;
         }
 
 
-        return Some(Box::new(Decl::Prototype{name, parameters: params, returntype/*ret_types*/}));
+        //return Some(Box::new(Decl::Prototype{name, parameters: params, returntype/*ret_types*/}));
     }
 
     fn block(&mut self) -> Option<Box<Stmt>> { 
@@ -616,7 +624,7 @@ impl Parser {
                     _ => {
                         log_message(logger::LogLevel::ERROR, self.tokens[self.current].col, self.tokens[self.current].line, 
                             "Expected expression after second ';' in `for` loop".to_string());
-                        self.synchronize();
+                        // self.synchronize();
                         return None;
                     }
                 }
@@ -674,7 +682,7 @@ impl Parser {
                     self.tokens[self.current].col, self.tokens[self.start].line, 
                     "Unexpected token in expression".to_string()
                 );
-                self.synchronize();
+                // self.synchronize();
                 None
             }
         }
@@ -744,7 +752,11 @@ impl Parser {
             match self.consume(TokenType::IDENTIFIER, 
                 "L-value needs to be either variable or attribute references".to_string()) {
                     Some(tok) => 
-                        atom = Box::new(Expr::AttributeRef{object: atom, name: tok, datatype: Datatype::yet_to_infer}),
+                        atom = Box::new(Expr::AttributeRef{
+                            object: atom, 
+                            name: tok, 
+                            object_dtype: Datatype::yet_to_infer,
+                            datatype: Datatype::yet_to_infer}),
                     _ => return None,
             }
         }
@@ -1167,7 +1179,13 @@ impl Parser {
                 match self.consume(TokenType::IDENTIFIER, 
                     "Expected an identifier after '.'".to_string()) {
                         Some(tok) => 
-                            atom = Box::new(Expr::AttributeRef{object: atom, name: tok, datatype: Datatype::yet_to_infer}),
+                            atom = Box::new(
+                                Expr::AttributeRef{
+                                    object: atom, 
+                                    name: tok, 
+                                    object_dtype: Datatype::yet_to_infer,
+                                    datatype: Datatype::yet_to_infer
+                                }),
                         _ => return Some(atom)
                 }
 
@@ -1188,7 +1206,15 @@ impl Parser {
                 println!("In primary loop: casting");
                 match self.consume_multi(TokenType::get_datatypes(), 
                 "Expected a datatype after 'as' keyword for type casting".to_string()) {
-                    Some(tok) => atom = Box::new(Expr::Cast{variable:atom, cast_type: tok, datatype: Datatype::yet_to_infer}),
+                    Some(tok) => 
+                        atom = Box::new(
+                            Expr::Cast{
+                                variable:atom, 
+                                cast_type: tok, 
+                                from_dtype: Datatype::yet_to_infer, 
+                                to_dtype: Datatype::yet_to_infer
+                            }
+                        ),
                     _ => return Some(atom)
                 }
             } else {
@@ -1268,7 +1294,7 @@ impl Parser {
         match self.consume(TokenType::IDENTIFIER, 
             "Expected identifier in struct expression".to_string()) {
                 Some(tok) => name = tok,
-                _ => return None,
+                _ => { self.synchronize(); return None;},
         }
 
         match self.consume(TokenType::CURLY_OPEN, 
@@ -1287,7 +1313,7 @@ impl Parser {
             match self.consume(TokenType::IDENTIFIER, 
                 "Expected field name in struct expression".to_string()) {
                     Some(tok) => field_name = tok,
-                    _ => return None,
+                    _ => { self.synchronize(); return None;},
                     // _ => {
                     //     while self.curr() == Some(name) {
                     //         self.current-=1;
@@ -1300,10 +1326,11 @@ impl Parser {
                 "Expected ':' after field name in struct expression".to_string()) {
                     Some(_) => (),
                     // _ => return Some(Box::new(Expr::Variable{name, datatype: Datatype::yet_to_infer, struct_name: None}))
-                    _ => return None,
+                    _ => { self.synchronize(); return None;},
             }
 
-            match self.expression() {
+            // match self.expression() {
+            match self.assignment() {
                 Some(expr) => field_value = expr,
                 _ => {
                     self.synchronize();

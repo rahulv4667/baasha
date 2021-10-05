@@ -44,11 +44,22 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
             // Decl::ImplDecl{name, trait_name, funcs}
             Decl::ImplDecl{name, funcs, ..}
                 => {
-                    (*self.symbol_table.impl_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
+                    for func in funcs {
+                        self.visit_decl(func);
+                        (*self.symbol_table.impl_decls.entry(
+                            name.value.clone()
+                        ).or_insert(vec![])).push((*func).clone());
+                    }
                 },
             Decl::TraitDecl{name, funcs}
                 => {
-                    (*self.symbol_table.trait_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
+                    // (*self.symbol_table.trait_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
+                    for func in funcs {
+                        self.visit_decl(func); 
+                        (*self.symbol_table.trait_decls.entry(
+                            name.value.clone()
+                        ).or_insert(vec![])).push((*func).clone());
+                    }
                 },
             // _ => ()
         }
@@ -134,8 +145,8 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                 => self.visit_literal_expr(value, datatype),
             Expr::Call{callee, arguments, datatype}
                 => self.visit_call_expr(callee, arguments, datatype),
-            Expr::AttributeRef{object, name, datatype}
-                => self.visit_attributeref_expr(object, name, datatype),
+            Expr::AttributeRef{object, name, object_dtype, datatype}
+                => self.visit_attributeref_expr(object, name, object_dtype, datatype),
             Expr::Binary{lhs, rhs, operator, datatype}
                 => self.visit_binary_expr(lhs, rhs, operator, datatype),
             Expr::Unary{operator, operand, datatype}
@@ -147,8 +158,8 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                 // => self.visit_assignment_expr(target_list, expr_list, datatype),
             Expr::Grouping{expr, datatype}
                 => self.visit_grouping_expr(expr, datatype),
-            Expr::Cast{variable, cast_type, datatype} 
-                => self.visit_cast_expr(variable, cast_type, datatype),
+            Expr::Cast{variable, cast_type, from_dtype, to_dtype} 
+                => self.visit_cast_expr(variable, cast_type, from_dtype, to_dtype),
             Expr::ExprList{expr_list, datatype}
                 => self.visit_exprlist_expr(expr_list, datatype),
             // _ => {return Datatype::yet_to_infer;}
@@ -158,8 +169,13 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
 
 #[allow(dead_code, unused)]
 impl TypeChecker {
-    fn visit_cast_expr(&mut self, variable: &mut Box<Expr>, casttype: &mut Token, datatype: &mut Datatype) -> Datatype {
+    fn visit_cast_expr(&mut self, 
+        variable: &mut Box<Expr>, 
+        casttype: &mut Token, 
+        from_dtype: &mut Datatype,
+        to_dtype: &mut Datatype) -> Datatype {
         let var_type = self.visit_expr(variable);
+        *from_dtype = var_type.clone();
         let mut cast_type = Datatype::get_datatype(&casttype.tok_type);
         if let Datatype::object{..} = cast_type {
             // check if a struct of given casttype exists
@@ -169,7 +185,7 @@ impl TypeChecker {
                 // casttype doesnt exist.
                 log_message(logger::LogLevel::ERROR, casttype.col, casttype.line, 
                     "Given cast type doesn't exist. Make sure to declare structs before using.".to_string());
-                *datatype = var_type.clone();
+                *to_dtype = var_type.clone();
                 return var_type;
             }
         }
@@ -178,10 +194,10 @@ impl TypeChecker {
 
 
         if var_type == Datatype::yet_to_infer { 
-            *datatype = var_type;
+            *to_dtype = var_type;
             return Datatype::yet_to_infer; 
         }
-        *datatype = cast_type.clone();
+        *to_dtype = cast_type.clone();
         return cast_type.clone();
     }
 
@@ -435,115 +451,212 @@ impl TypeChecker {
 
     fn visit_call_expr(&mut self, callee: &mut Box<Expr>, arguments: &mut Vec<Box<Expr>>/*&mut Box<Expr>*/,
                          datatype: &mut Datatype) -> Datatype {
-        match *callee.clone() {
-            Expr::AttributeRef{name, object, datatype:dt}
-                => {
-                    let mut obj = object.clone();
-                    let dtype = self.visit_expr(&mut *obj);
-                    match dtype {
-                        Datatype::yet_to_infer => return Datatype::yet_to_infer,
-                        Datatype::object{name: obj_name} => {
-                            
-                            match self.symbol_table.impl_decls.get(&obj_name) {
-                                Some(funcs) => {
-                                    // return Datatype::yet_to_infer;
-                                    for func in funcs {
-                                        if let Decl::FuncDef{prototype, block} = *func.clone() {
-                                            if let Decl::Prototype{name:func_name, parameters, returntype}
-                                                = *prototype.clone() {
-                                                    if func_name.value == name.value {
-                                                        *datatype = Datatype::get_tok_datatype(&returntype);
-                                                        return Datatype::get_tok_datatype(&returntype);
-                                                    }
-                                                    return Datatype::yet_to_infer;
-                                                }
-                                        }
-                                    }
 
-                                    log_message(logger::LogLevel::ERROR, name.col, name.line, 
-                                        "Couldn't find implementation for the method. Be sure to define it before using.".to_string());
-                                    return Datatype::yet_to_infer;
-                                },
-                                _ => {
-                                    log_message(logger::LogLevel::ERROR, name.col, name.line, 
-                                        format!("No implementation given for the struct type '{}'", obj_name));
-                                    return Datatype::yet_to_infer;
-                                }
-                            }
-                        }
-                        _ => {
-                            log_message(logger::LogLevel::ERROR, name.col, name.line, 
-                                "Can't have an attribute on types other than objects.".to_string());
-                            return Datatype::yet_to_infer;
-                        }
-                    }
-                },
+        let func_type = self.visit_expr(callee);
 
-            Expr::Variable{name, datatype: dt, struct_name}
-                => {
-                    match self.symbol_table.func_table.get(&name.value) {
-                        Some(Decl::FuncDef{prototype, block}) => {
-                            if let Decl::Prototype{name, parameters, returntype} = *prototype.clone() {
-                                *datatype = Datatype::get_tok_datatype(&returntype);
-                                return Datatype::get_tok_datatype(&returntype);
-                            }
-                        },
-                        _ => {
-                            log_message(logger::LogLevel::ERROR, name.col, name.line, 
-                                "Couldn't find specified function. Be sure to define it before using.".to_string());
-                            return Datatype::yet_to_infer;
-                        }
-                    }
-                    return Datatype::yet_to_infer;
-                },
-            _ => {
-                // search in func_table;
-                // let callee_type = self.visit_expr(callee);
+        // let func_name;
+        // let obj_name;
+        // let 
+        if let Datatype::function{name: func_name, obj_name, returntype, param_types}
+            = func_type {
+
+            if arguments.len() != param_types.len() {
+                logger::log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
+                    format!("Arity not right when calling {:?}: ({:?}) Parameters in definition but {:?} arguments provided",
+                        if obj_name.is_some() { obj_name.clone().unwrap()+func_name.as_str()} else {func_name.clone()}, 
+                        param_types.len(), arguments.len())
+                );
                 return Datatype::yet_to_infer;
             }
+            for (i, argument) in arguments.into_iter().enumerate() {
+                let arg_type = self.visit_expr(argument);
+                if arg_type != *param_types[i] {
+                    logger::log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
+                        format!("Argument type not matching at param number {:?} for function {:?}",
+                            i+1, if obj_name.is_some() { obj_name.clone().unwrap()+func_name.as_str()} else {func_name.clone()})
+                    );
+                    return Datatype::yet_to_infer;
+                }
+            }
+
+            *datatype = *returntype;
+            return (*datatype).clone();
         }
+        return Datatype::yet_to_infer;
+
+        // match *callee.clone() {
+        //     Expr::AttributeRef{name, object, object_dtype, datatype:dt}
+        //         => {
+        //             let mut obj = object.clone();
+        //             let dtype = self.visit_expr(&mut *obj);
+        //             match dtype {
+        //                 Datatype::yet_to_infer => return Datatype::yet_to_infer,
+        //                 Datatype::object{name: obj_name} => {
+                            
+        //                     match self.symbol_table.impl_decls.get(&obj_name) {
+        //                         Some(funcs) => {
+        //                             // return Datatype::yet_to_infer;
+        //                             for func in funcs {
+        //                                 if let Decl::FuncDef{prototype, block} = *func.clone() {
+        //                                     if let Decl::Prototype{name:func_name, parameters, returntype}
+        //                                         = *prototype.clone() {
+        //                                             if func_name.value == name.value {
+        //                                                 *datatype = Datatype::get_tok_datatype(&returntype);
+        //                                                 return Datatype::get_tok_datatype(&returntype);
+        //                                             }
+        //                                             return Datatype::yet_to_infer;
+        //                                         }
+        //                                 }
+        //                             }
+
+        //                             log_message(logger::LogLevel::ERROR, name.col, name.line, 
+        //                                 "Couldn't find implementation for the method. Be sure to define it before using.".to_string());
+        //                             return Datatype::yet_to_infer;
+        //                         },
+        //                         _ => {
+        //                             log_message(logger::LogLevel::ERROR, name.col, name.line, 
+        //                                 format!("No implementation given for the struct type '{}'", obj_name));
+        //                             return Datatype::yet_to_infer;
+        //                         }
+        //                     }
+        //                 }
+        //                 _ => {
+        //                     log_message(logger::LogLevel::ERROR, name.col, name.line, 
+        //                         "Can't have an attribute on types other than objects.".to_string());
+        //                     return Datatype::yet_to_infer;
+        //                 }
+        //             }
+        //         },
+
+        //     Expr::Variable{name, datatype: dt, struct_name}
+        //         => {
+        //             match self.symbol_table.func_table.get(&name.value) {
+        //                 Some(Decl::FuncDef{prototype, block}) => {
+        //                     if let Decl::Prototype{name, parameters, returntype} = *prototype.clone() {
+        //                         *datatype = Datatype::get_tok_datatype(&returntype);
+        //                         return Datatype::get_tok_datatype(&returntype);
+        //                     }
+        //                 },
+        //                 _ => {
+        //                     log_message(logger::LogLevel::ERROR, name.col, name.line, 
+        //                         "Couldn't find specified function. Be sure to define it before using.".to_string());
+        //                     return Datatype::yet_to_infer;
+        //                 }
+        //             }
+        //             return Datatype::yet_to_infer;
+        //         },
+        //     _ => {
+        //         // search in func_table;
+        //         // let callee_type = self.visit_expr(callee);
+        //         return Datatype::yet_to_infer;
+        //     }
+        // }
     }
 
-    fn visit_attributeref_expr(&mut self, object: &mut Box<Expr>, name: &mut Token, datatype: &mut Datatype) -> Datatype {
+    fn visit_attributeref_expr(&mut self, 
+        object: &mut Box<Expr>, 
+        name: &mut Token, 
+        object_dtype: &mut Datatype,
+        datatype: &mut Datatype) 
+    -> Datatype {
         let mut attr_name = name;
-        match self.visit_expr(object) {
-            Datatype::object{name} => {
-                match self.symbol_table.struct_decls.get(&name) {
+        *object_dtype = self.visit_expr(object);
 
-                    Some(Decl::StructDecl{ name:struct_name, fields}) => {
+        if let Datatype::object{name: obj_name} = object_dtype {
+            if let Decl::StructDecl{name: struct_name, fields} 
+                = self.symbol_table.struct_decls.get(obj_name).unwrap() {
                     
-                        // check in fields declaration
-                        for field in fields {
-                            if(field.0.value == attr_name.value) {
-                                let mut dtype = Datatype::get_datatype(&field.1.tok_type);
-                                if let Datatype::object{name:n} = dtype {
-                                    dtype = Datatype::object{name:attr_name.value.clone()};
-                                }
-                                *datatype = dtype.clone();
-                                return dtype;
-                            }
+                    for (field_name, field_type) in fields {
+                        if field_name.value == attr_name.value {
+                            *datatype = Datatype::get_tok_datatype(field_type);
+                            return (*datatype).clone();
                         }
-                    
-                        // check in impl and traits. 
-                        // probably not needed.
-
-                        log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-                            "Given attribute doesn't exist in the struct.".to_string());
-                    },
-                    _ => {
-                        log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-                            "The struct containing this attribute doesn't seem to be defined yet.".to_string());
-                        return Datatype::yet_to_infer;
                     }
+
+            }
+
+            
+            let impl_decls = self.symbol_table.impl_decls.get(obj_name).unwrap();
+            for impl_decl in impl_decls {
+                if let Decl::ImplDecl{name: struct_name, trait_name, funcs}
+                    = &**impl_decl {
+
+                        for func in funcs {
+
+                            if let Decl::FuncDef{prototype, block} = &**func {
+
+                                if let Decl::Prototype{name: func_name, parameters, returntype}
+                                    = &**prototype {
+
+                                    if func_name.value == attr_name.value {
+                                        // create Datattype::Function{}
+                                        let mut param_types = vec![];
+                                        let ret_type = Box::new(Datatype::get_tok_datatype(returntype));
+
+                                        for (param_name, param_type) in parameters {
+                                            param_types.push(Box::new(Datatype::get_tok_datatype(param_type)));
+                                        }
+
+                                        return Datatype::function{
+                                            name: func_name.value.clone(),
+                                            obj_name: Some(struct_name.value.clone()),
+                                            returntype: ret_type,
+                                            param_types
+                                        };
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
                 }
-                return Datatype::yet_to_infer;
-            },
-            _ => {
-                log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-                    "Can't use attribute reference on types other than objects".to_string());
-                return Datatype::yet_to_infer;
             }
         }
+
+        return Datatype::yet_to_infer;
+
+        // match self.visit_expr(object) {
+        //     Datatype::object{name} => {
+                
+        //         match self.symbol_table.struct_decls.get(&name) {
+
+        //             Some(Decl::StructDecl{ name:struct_name, fields}) => {
+        //                 *object_dtype = Datatype::object{name: name.clone()};
+
+        //                 // check in fields declaration
+        //                 for field in fields {
+        //                     if(field.0.value == attr_name.value) {
+        //                         let mut dtype = Datatype::get_datatype(&field.1.tok_type);
+        //                         if let Datatype::object{name:n} = dtype {
+        //                             dtype = Datatype::object{name:attr_name.value.clone()};
+        //                         }
+        //                         *datatype = dtype.clone();
+        //                         return dtype;
+        //                     }
+        //                 }
+                    
+        //                 // check in impl and traits. 
+        //                 // probably not needed.
+
+        //                 log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+        //                     "Given attribute doesn't exist in the struct.".to_string());
+        //             },
+        //             _ => {
+        //                 log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+        //                     "The struct containing this attribute doesn't seem to be defined yet.".to_string());
+        //                 return Datatype::yet_to_infer;
+        //             }
+        //         }
+        //         return Datatype::yet_to_infer;
+        //     },
+        //     _ => {
+        //         log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
+        //             "Can't use attribute reference on types other than objects".to_string());
+        //         return Datatype::yet_to_infer;
+        //     }
+        // }
     }
 
     fn visit_variable_expr(&mut self, name: &mut Token, datatype: &mut Datatype, struct_name: &mut Option<String>) -> Datatype {

@@ -138,3 +138,12 @@ impl TokenType {
         ]
     }
 }
+
+
+#[allow(non_camel_case_types,dead_code)]
+#[derive(Debug,PartialEq,Clone)]
+pub enum Scope {
+    Global,
+    Impl{name: String, trait_name: String},
+    Trait{name: String}
+}

@@ -10,16 +10,20 @@ mod ast;
 mod parser;
 mod symbol_table;
 mod type_check_visitor;
+mod ir_lowering;
 use lexer::Lexer;
 // use ast::{Stmt, Expr};
 use parser::Parser;
 use visitor::Printer;
 
+use crate::ir_lowering::Codegen;
+use crate::symbol_table::IRSymbolTable;
 use crate::symbol_table::SymbolTable;
 use crate::type_check_visitor::TypeChecker;
 use crate::visitor::MutableVisitor;
 // use crate::globals::TokenType;
 use crate::visitor::Visitor;
+use crate::visitor::VisitorWithLifeTime;
 
 
 fn main()  {
@@ -75,5 +79,30 @@ fn main()  {
     for decl in &decls {
         printer.visit_decl(decl);
     }
-    
+ 
+    let context = inkwell::context::Context::create();
+    let module = context.create_module("main_mod");
+    let builder = context.create_builder();
+
+    let mut codegenerator = Codegen{
+        context: &context,
+        builder: &builder,
+        module: &module,
+        symbol_table: IRSymbolTable { 
+            variable_table: HashMap::new(), 
+            struct_decls: HashMap::new(),
+            impl_decls: HashMap::new(),
+            trait_decls: HashMap::new(),
+            func_table: HashMap::new()
+        },
+        current_scope: globals::Scope::Global,
+        curr_fn_value: None,
+        is_parsing_lvalue: false
+    };
+
+    for decl in &decls {
+        codegenerator.visit_decl(decl);
+    }
+
+    codegenerator.module.print_to_stderr();
 }
