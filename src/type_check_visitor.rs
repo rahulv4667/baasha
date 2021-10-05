@@ -11,7 +11,8 @@ use crate::logger::*;
 
 
 pub struct TypeChecker {
-    pub symbol_table: SymbolTable
+    pub symbol_table: SymbolTable,
+    pub has_errors: bool
 }
 
 impl MutableVisitor<(), (), Datatype> for TypeChecker {
@@ -89,6 +90,7 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
 
                     if let Some(cond) = condition {
                         if self.visit_expr(cond) != Datatype::bool {
+                            self.has_errors = true;
                             log_message(logger::LogLevel::ERROR, 
                                 for_token.col, for_token.line, 
                                 "Condition expression of `for` should be of type `bool`".to_string());
@@ -104,6 +106,7 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
             Stmt::If{if_token, condition, then_block, else_block} 
                 => {
                     if self.visit_expr(condition) != Datatype::bool {
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, 
                             if_token.col, if_token.line, 
                             "Condition expression of `if` should be of type `bool`".to_string());
@@ -183,6 +186,7 @@ impl TypeChecker {
                 cast_type = Datatype::object{name: casttype.value.clone()};
             } else {
                 // casttype doesnt exist.
+                self.has_errors = true;
                 log_message(logger::LogLevel::ERROR, casttype.col, casttype.line, 
                     "Given cast type doesn't exist. Make sure to declare structs before using.".to_string());
                 *to_dtype = var_type.clone();
@@ -220,6 +224,7 @@ impl TypeChecker {
         let mut has_error: bool = false;
                     
         if lhs_datatype != rhs_datatype {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, 
             operator.col, operator.line, "Operand types mismatch".to_string());
             has_error = true;
@@ -257,6 +262,7 @@ impl TypeChecker {
                                 let dtype = self.visit_expr(field_expr);
 
                                 if dtype != Datatype::get_datatype(&field_type.tok_type) {
+                                    self.has_errors = true;
                                     log_message(logger::LogLevel::ERROR, field_val.col, field_val.line, 
                                         "Datatype of expression being assigned doesn't match type declaration in struct".to_string());
                                     has_error = true;
@@ -264,6 +270,7 @@ impl TypeChecker {
 
                             },
                             _ => {
+                                self.has_errors = true;
                                 log_message(logger::LogLevel::ERROR, field_val.col, field_val.line, 
                                     "Couldn't find field name in struct declaration".to_string());
                                 has_error = true;
@@ -282,6 +289,7 @@ impl TypeChecker {
                             }
                         }
 
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, struct_name.col, struct_name.line, 
                             format!("Some fields were missing from expression: {:?}", missing_fields));
                         has_error = true;
@@ -293,6 +301,7 @@ impl TypeChecker {
             *datatype = if has_error {Datatype::yet_to_infer} else {Datatype::object{name: struct_name.value.clone()}};
             return (*datatype).clone();
         } else {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, struct_name.col, struct_name.line, 
                 "Couldn't find struct declaration of given name. Make sure to declare struct before using it.".to_string());
             return Datatype::yet_to_infer;
@@ -310,6 +319,7 @@ impl TypeChecker {
         let mut has_error: bool = false;
         
         if lhs_datatype != rhs_datatype {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, 
                 operator.col, operator.line, "Operand types mismatch".to_string());
                 has_error = true;
@@ -325,6 +335,7 @@ impl TypeChecker {
                 // }
                 match lhs_datatype {
                     Datatype::bool|Datatype::object{..} => {
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                             "LHS of operator is either an object or bool. Operation can't be performed".to_string());
                         has_error = true;
@@ -339,6 +350,7 @@ impl TypeChecker {
                 // }
                 match rhs_datatype {
                     Datatype::bool|Datatype::object{..} => {
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                             "RHS of operator is either an object or bool. Operation can't be performed.".to_string());
                         has_error = true;
@@ -349,12 +361,14 @@ impl TypeChecker {
 
             TokenType::BITWISE_AND|TokenType::BITWISE_OR|TokenType::BITWISE_XOR => {
                 if !Datatype::get_int_types().contains(&lhs_datatype) && lhs_datatype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "LHS of operator is neither integer type nor boolean type. Operation can't be performed".to_string());
                     has_error = true;
                 }
 
                 if !Datatype::get_int_types().contains(&rhs_datatype) && rhs_datatype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "RHS of operator is neither integer type nor boolean type. Operation can't be performed".to_string());
                     has_error = true;
@@ -363,6 +377,7 @@ impl TypeChecker {
 
             TokenType::LEFT_SHIFT | TokenType::RIGHT_SHIFT => {
                 if !Datatype::get_int_types().contains(&lhs_datatype) || !Datatype::get_int_types().contains(&rhs_datatype) {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "One of the operands is not integer. Operation can't be performed".to_string());
                     has_error = true;
@@ -380,12 +395,14 @@ impl TypeChecker {
             
             TokenType::K_AND|TokenType::K_OR => {
                 if lhs_datatype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                                 "LHS of logical operations needs to be of type 'bool'".to_string());
                     has_error = true;
                 }
                 
                 if rhs_datatype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                                 "RHS of logical operations needs to be of type 'bool'".to_string());
                     has_error = true;
@@ -405,6 +422,7 @@ impl TypeChecker {
         match operator.tok_type {
             TokenType::BANG => {
                 if dtype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "Operand for '!' needs to be of boolean type".to_string());
                     has_error = true; 
@@ -413,6 +431,7 @@ impl TypeChecker {
             
             TokenType::PLUS => {
                 if !Datatype::get_int_types().contains(&dtype) || !Datatype::get_float_types().contains(&dtype) {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "Can't use unary '+' on types other than integers or floats".to_string());
                         has_error = true;
@@ -421,6 +440,7 @@ impl TypeChecker {
             
             TokenType::MINUS => {
                 if !Datatype::get_signed_types().contains(&dtype) || !Datatype::get_float_types().contains(&dtype) {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "Can't use unary '-' on types other than signed integers and floats".to_string());
                     has_error = true;
@@ -429,6 +449,7 @@ impl TypeChecker {
 
             TokenType::BITWISE_NOT => {
                 if !Datatype::get_int_types().contains(&dtype) || dtype != Datatype::bool {
+                    self.has_errors = true;
                     log_message(logger::LogLevel::ERROR, operator.col, operator.line, 
                         "Bitwise NOT can't be performed on types other than integers and boolean".to_string());
                     has_error;
@@ -461,6 +482,7 @@ impl TypeChecker {
             = func_type {
 
             if arguments.len() != param_types.len() {
+                self.has_errors = true;
                 logger::log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
                     format!("Arity not right when calling {:?}: ({:?}) Parameters in definition but {:?} arguments provided",
                         if obj_name.is_some() { obj_name.clone().unwrap()+func_name.as_str()} else {func_name.clone()}, 
@@ -471,6 +493,7 @@ impl TypeChecker {
             for (i, argument) in arguments.into_iter().enumerate() {
                 let arg_type = self.visit_expr(argument);
                 if arg_type != *param_types[i] {
+                    self.has_errors = true;
                     logger::log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
                         format!("Argument type not matching at param number {:?} for function {:?}",
                             i+1, if obj_name.is_some() { obj_name.clone().unwrap()+func_name.as_str()} else {func_name.clone()})
@@ -481,76 +504,11 @@ impl TypeChecker {
 
             *datatype = *returntype;
             return (*datatype).clone();
+        } else {
+
         }
         return Datatype::yet_to_infer;
 
-        // match *callee.clone() {
-        //     Expr::AttributeRef{name, object, object_dtype, datatype:dt}
-        //         => {
-        //             let mut obj = object.clone();
-        //             let dtype = self.visit_expr(&mut *obj);
-        //             match dtype {
-        //                 Datatype::yet_to_infer => return Datatype::yet_to_infer,
-        //                 Datatype::object{name: obj_name} => {
-                            
-        //                     match self.symbol_table.impl_decls.get(&obj_name) {
-        //                         Some(funcs) => {
-        //                             // return Datatype::yet_to_infer;
-        //                             for func in funcs {
-        //                                 if let Decl::FuncDef{prototype, block} = *func.clone() {
-        //                                     if let Decl::Prototype{name:func_name, parameters, returntype}
-        //                                         = *prototype.clone() {
-        //                                             if func_name.value == name.value {
-        //                                                 *datatype = Datatype::get_tok_datatype(&returntype);
-        //                                                 return Datatype::get_tok_datatype(&returntype);
-        //                                             }
-        //                                             return Datatype::yet_to_infer;
-        //                                         }
-        //                                 }
-        //                             }
-
-        //                             log_message(logger::LogLevel::ERROR, name.col, name.line, 
-        //                                 "Couldn't find implementation for the method. Be sure to define it before using.".to_string());
-        //                             return Datatype::yet_to_infer;
-        //                         },
-        //                         _ => {
-        //                             log_message(logger::LogLevel::ERROR, name.col, name.line, 
-        //                                 format!("No implementation given for the struct type '{}'", obj_name));
-        //                             return Datatype::yet_to_infer;
-        //                         }
-        //                     }
-        //                 }
-        //                 _ => {
-        //                     log_message(logger::LogLevel::ERROR, name.col, name.line, 
-        //                         "Can't have an attribute on types other than objects.".to_string());
-        //                     return Datatype::yet_to_infer;
-        //                 }
-        //             }
-        //         },
-
-        //     Expr::Variable{name, datatype: dt, struct_name}
-        //         => {
-        //             match self.symbol_table.func_table.get(&name.value) {
-        //                 Some(Decl::FuncDef{prototype, block}) => {
-        //                     if let Decl::Prototype{name, parameters, returntype} = *prototype.clone() {
-        //                         *datatype = Datatype::get_tok_datatype(&returntype);
-        //                         return Datatype::get_tok_datatype(&returntype);
-        //                     }
-        //                 },
-        //                 _ => {
-        //                     log_message(logger::LogLevel::ERROR, name.col, name.line, 
-        //                         "Couldn't find specified function. Be sure to define it before using.".to_string());
-        //                     return Datatype::yet_to_infer;
-        //                 }
-        //             }
-        //             return Datatype::yet_to_infer;
-        //         },
-        //     _ => {
-        //         // search in func_table;
-        //         // let callee_type = self.visit_expr(callee);
-        //         return Datatype::yet_to_infer;
-        //     }
-        // }
     }
 
     fn visit_attributeref_expr(&mut self, 
@@ -617,46 +575,6 @@ impl TypeChecker {
 
         return Datatype::yet_to_infer;
 
-        // match self.visit_expr(object) {
-        //     Datatype::object{name} => {
-                
-        //         match self.symbol_table.struct_decls.get(&name) {
-
-        //             Some(Decl::StructDecl{ name:struct_name, fields}) => {
-        //                 *object_dtype = Datatype::object{name: name.clone()};
-
-        //                 // check in fields declaration
-        //                 for field in fields {
-        //                     if(field.0.value == attr_name.value) {
-        //                         let mut dtype = Datatype::get_datatype(&field.1.tok_type);
-        //                         if let Datatype::object{name:n} = dtype {
-        //                             dtype = Datatype::object{name:attr_name.value.clone()};
-        //                         }
-        //                         *datatype = dtype.clone();
-        //                         return dtype;
-        //                     }
-        //                 }
-                    
-        //                 // check in impl and traits. 
-        //                 // probably not needed.
-
-        //                 log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-        //                     "Given attribute doesn't exist in the struct.".to_string());
-        //             },
-        //             _ => {
-        //                 log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-        //                     "The struct containing this attribute doesn't seem to be defined yet.".to_string());
-        //                 return Datatype::yet_to_infer;
-        //             }
-        //         }
-        //         return Datatype::yet_to_infer;
-        //     },
-        //     _ => {
-        //         log_message(logger::LogLevel::ERROR, attr_name.col, attr_name.line, 
-        //             "Can't use attribute reference on types other than objects".to_string());
-        //         return Datatype::yet_to_infer;
-        //     }
-        // }
     }
 
     fn visit_variable_expr(&mut self, name: &mut Token, datatype: &mut Datatype, struct_name: &mut Option<String>) -> Datatype {
@@ -667,9 +585,10 @@ impl TypeChecker {
                 return (*datatype).clone();
             },
             _ => {
-                logger::log_message(logger::LogLevel::ERROR, 
-                    name.col, name.line, format!("Undefined variable '{}'", name.value));
-                return Datatype::yet_to_infer;
+                // self.has_errors = true;
+                // logger::log_message(logger::LogLevel::ERROR, 
+                //     name.col, name.line, format!("Undefined variable '{}'", name.value));
+                // return Datatype::yet_to_infer;
             }
         }
 
@@ -682,6 +601,7 @@ impl TypeChecker {
                         }
                     },
                     _ => {
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, name.col, name.line, 
                             "Variable declared as object but unable to find its struct type".to_string());
                         *datatype = Datatype::yet_to_infer;
@@ -690,6 +610,36 @@ impl TypeChecker {
                 }
             },
             _ => ()
+        }
+
+        if self.symbol_table.func_table.get(&name.value).is_some() {
+            
+
+                if let Decl::Prototype{name: func_name, parameters, returntype}
+                    = self.symbol_table.func_table.get(&name.value).unwrap() {
+
+                        if func_name.value == name.value {
+                            // create Datattype::Function{}
+                            let mut param_types = vec![];
+                            let ret_type = Box::new(Datatype::get_tok_datatype(returntype));
+
+                            for (param_name, param_type) in parameters {
+                                param_types.push(Box::new(Datatype::get_tok_datatype(param_type)));
+                            }
+
+                            return Datatype::function{
+                                name: func_name.value.clone(),
+                                obj_name: None,
+                                returntype: ret_type,
+                                param_types
+                            };
+                        }
+
+                    
+
+                }
+
+            
         }
         return Datatype::yet_to_infer;
     }

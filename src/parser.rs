@@ -18,7 +18,8 @@ pub struct Parser {
     current: usize,
     start: usize,
     tokens: Vec<Token>,
-    restrictions: Vec<Restriction>
+    restrictions: Vec<Restriction>,
+    has_errors: bool
 }
 
 #[allow(dead_code)]
@@ -93,12 +94,17 @@ impl Parser {
     fn consume(&mut self, ttype: TokenType, error_msg: String) -> Option<Token> {
         if self.check(ttype) { return self.advance(); }
         match self.peek() {
-            Some(tok) => 
-                logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg),
+            Some(tok) => {
+                self.has_errors = true;
+                logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg)
+            },
             _ => match self.curr() {
                 Some(tok) => logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg),
-                _ => log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
+                _ => {
+                    self.has_errors = true;
+                    log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
                     "Unexpected error occured\n".to_string())
+                }
             }
         };
 
@@ -111,12 +117,17 @@ impl Parser {
         } 
 
         match self.peek() {
-            Some(tok) => 
-                logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg),
+            Some(tok) => {
+                self.has_errors = true;
+                logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg)
+            }
             _ => match self.curr() {
                 Some(tok) => logger::log_message(logger::LogLevel::ERROR, tok.col, tok.line, error_msg),
-                _ => log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
+                _ => {
+                    self.has_errors = true;
+                    log_message(logger::LogLevel::ERROR, usize::MAX, usize::MAX, 
                     "Unexpected error occured\n".to_string())
+                }
             }
         };
 
@@ -204,6 +215,7 @@ impl Parser {
             if !self.match_(TokenType::COMMA) {
                 if let Some(peek) = self.peek() {
                     if peek.tok_type != TokenType::CURLY_CLOSE {
+                        self.has_errors = true;
                         logger::log_message(logger::LogLevel::ERROR, peek.col, peek.line, 
                             "Expected ',' or '}' after field declaration".to_string());
                         return None;
@@ -261,6 +273,7 @@ impl Parser {
                                     => funcs.push(Box::new(Decl::FuncDef{prototype, block})),
                         
                                 _ => {
+                                    self.has_errors = true;
                                     log_message(logger::LogLevel::ERROR, 
                                         self.tokens[self.current].col, self.tokens[self.current].line, 
                                         "Expected function definition inside impl declaration".to_string());
@@ -417,6 +430,7 @@ impl Parser {
 
         } else {
             // For now generating error. In future, should default to '()' type.
+            self.has_errors = true;
             log_message(logger::LogLevel::ERROR, name.col, name.line, 
                 "A return type needs to be provided in prototype of function".to_string());
             // self.synchronize();
@@ -498,6 +512,7 @@ impl Parser {
         }
 
         if typename.is_none() && initialization_value.is_none() {
+            self.has_errors = true;
             log_message(logger::LogLevel::ERROR, 
                 name.col, name.line, "A variable declaration requires either a datatype or an initialization value".to_string());
             return None;
@@ -622,6 +637,7 @@ impl Parser {
                         
                     },
                     _ => {
+                        self.has_errors = true;
                         log_message(logger::LogLevel::ERROR, self.tokens[self.current].col, self.tokens[self.current].line, 
                             "Expected expression after second ';' in `for` loop".to_string());
                         // self.synchronize();
@@ -677,6 +693,7 @@ impl Parser {
         match self.expression() {
             Some(expr) => Some(Box::new(Stmt::Expression{expr})),
             _ => {
+                self.has_errors = true;
                 logger::log_message(
                     logger::LogLevel::ERROR, 
                     self.tokens[self.current].col, self.tokens[self.start].line, 
@@ -705,6 +722,7 @@ impl Parser {
             match self.assignment() {
                 Some(expr) => expr_list.push(expr),
                 _ => {
+                    self.has_errors = true;
                     logger::log_message(logger::LogLevel::ERROR, 
                         self.tokens[self.current].col, self.tokens[self.current].line, 
                         "Expected expression after comma".to_string()
@@ -823,6 +841,7 @@ impl Parser {
                         Some(target) 
                             => {
                                 if !self.is_target_valid(&target) {
+                                    self.has_errors = true;
                                     log_message(logger::LogLevel::ERROR, 
                                         self.tokens[self.current].col, self.tokens[self.current].line, 
                                         "L-value incorrect. Only variables and attribute refs allowed".to_string());
@@ -1344,6 +1363,7 @@ impl Parser {
             if !self.match_(TokenType::COMMA) {
                 if let Some(peek) = self.peek() {
                     if peek.tok_type != TokenType::CURLY_CLOSE {
+                        self.has_errors = true;
                         logger::log_message(logger::LogLevel::ERROR, peek.col, peek.line, 
                             "Expected ',' or '}' after field expression".to_string());
                         return None;
@@ -1362,7 +1382,7 @@ impl Parser {
     // fn call(&self) -> Option<Box<Expr>> { unimplemented!() }
     
 
-    pub fn parse(&mut self, tokens: Vec<Token>) -> Vec<Box<Decl>> {
+    pub fn parse(&mut self, tokens: Vec<Token>) -> (Vec<Box<Decl>>, bool) {
         self.tokens = tokens;
         self.current = 0;
         self.start = 0;
@@ -1376,12 +1396,12 @@ impl Parser {
             }
         }
         
-        return declarations;
+        return (declarations, self.has_errors);
         // drop(tokens);
         // return vec![];
     }
 
     pub fn new() -> Self {
-        Parser { current: 0, start: 0, tokens: vec![], restrictions: vec![] }
+        Parser { current: 0, start: 0, tokens: vec![], restrictions: vec![], has_errors: false }
     }
 }

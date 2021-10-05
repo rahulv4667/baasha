@@ -1,200 +1,3 @@
-
-File content:
-struct hello {
-    x: int32,
-    y: int64
-}
-
-trait hell {
-    func newhell() -> int32 {
-        return 0;
-    }
-}
-
-impl hello {
-    func new(y: int32) -> int32 {
-        return y;
-    }
-
-    func new2() -> int32 {
-        return 10;
-    }
-}
-
-impl hell for hello {
-    func newhell() -> int32 {
-        return 20;
-    }
-}
-
-func main2() -> int32 {
-    return 10;
-}
-
-func main() -> int32  {
-    //a = 20 as int32, 10 as int64;
-    //x.b.c(a, b);
-    //a = x.b();
-    //if b {} else {}
-    //for x = 10; x<10;x*=2 {  }
-    
-    //var x: int32 = 0;
-    //var y: int32 = 1;
-    //var z = (x + y);
-    //if z == (x+y) {}
-    
-    var y: int32;
-    var z: int64;
-    var x: hello = hello{x: y, y: z};
-    x.new();
-    main2();
-    
-    //hello{x:y, y:z};
-    
-    
-    //x.x = 10;
-    //x.y;
-    //var y: int32;
-    //var z: int32;
-    //var a: int32;
-    //a = 10;
-    //a = y+z;
-    //a += y;
-
-    //main2();
-    //a = y + z;
-    //for (x.x as int64) == 10 {}
-}
-========================================================================
-Token{ tok_type: K_STRUCT, value: "struct" }
-Token{ tok_type: IDENTIFIER, value: "hello" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: IDENTIFIER, value: "x" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: COMMA, value: "," }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: K_INT64, value: "int64" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_TRAIT, value: "trait" }
-Token{ tok_type: IDENTIFIER, value: "hell" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "newhell" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_RETURN, value: "return" }
-Token{ tok_type: INT_LITERAL, value: "0" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_IMPL, value: "impl" }
-Token{ tok_type: IDENTIFIER, value: "hello" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "new" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_RETURN, value: "return" }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "new2" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_RETURN, value: "return" }
-Token{ tok_type: INT_LITERAL, value: "10" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_IMPL, value: "impl" }
-Token{ tok_type: IDENTIFIER, value: "hell" }
-Token{ tok_type: K_FOR, value: "for" }
-Token{ tok_type: IDENTIFIER, value: "hello" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "newhell" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_RETURN, value: "return" }
-Token{ tok_type: INT_LITERAL, value: "20" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "main2" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_RETURN, value: "return" }
-Token{ tok_type: INT_LITERAL, value: "10" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: K_FUNC, value: "func" }
-Token{ tok_type: IDENTIFIER, value: "main" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: RIGHT_ARROW, value: "->" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: K_VAR, value: "var" }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: K_INT32, value: "int32" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: K_VAR, value: "var" }
-Token{ tok_type: IDENTIFIER, value: "z" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: K_INT64, value: "int64" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: K_VAR, value: "var" }
-Token{ tok_type: IDENTIFIER, value: "x" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: IDENTIFIER, value: "hello" }
-Token{ tok_type: EQUAL, value: "=" }
-Token{ tok_type: IDENTIFIER, value: "hello" }
-Token{ tok_type: CURLY_OPEN, value: "{" }
-Token{ tok_type: IDENTIFIER, value: "x" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: COMMA, value: "," }
-Token{ tok_type: IDENTIFIER, value: "y" }
-Token{ tok_type: COLON, value: ":" }
-Token{ tok_type: IDENTIFIER, value: "z" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: IDENTIFIER, value: "x" }
-Token{ tok_type: DOT, value: "." }
-Token{ tok_type: IDENTIFIER, value: "new" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: IDENTIFIER, value: "main2" }
-Token{ tok_type: BRACKET_OPEN, value: "(" }
-Token{ tok_type: BRACKET_CLOSE, value: ")" }
-Token{ tok_type: SEMICOLON, value: ";" }
-Token{ tok_type: CURLY_CLOSE, value: "}" }
-Token{ tok_type: FILE_EOF, value: "" }
-=========================================================================
 Calling declaration
 In declaration()
 In struct_declaration()
@@ -203,6 +6,59 @@ In declaration()
 In trait_declaration()
 In block()
 In prototype()
+In block()
+In statement()
+In var_stmt()
+In statement()
+In if_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "x" }
+In variable()
+In primary loop
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
+In grouping()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: INT_LITERAL, value: "1" }
+In literal()
+In primary loop
+In primary loop: casting
+In primary loop
+In primary loop
 In block()
 In statement()
 In return_stmt()
@@ -221,8 +77,84 @@ In multiplicative_expr()
 In unary_expr()
 In primary()
 In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "0" }
+Peek: Token{ tok_type: IDENTIFIER, value: "x" }
+In variable()
+In primary loop
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
+In grouping()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: INT_LITERAL, value: "1" }
 In literal()
+In primary loop
+In primary loop: casting
+In primary loop
+In primary loop
+In statement()
+In block()
+In statement()
+In return_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "x" }
+In variable()
+In primary loop
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
+In grouping()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: INT_LITERAL, value: "2" }
+In literal()
+In primary loop
+In primary loop: casting
+In primary loop
 In primary loop
 In statement()
 Calling declaration
@@ -472,205 +404,21 @@ Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
 Returning none from atom
 In primary loop
 In statement()
-Declarations: 6
-|
-|
-StructDecl{ Name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-          Fields{{ }}
-          Field name: Token{ tok_type: IDENTIFIER, value: "x" }, datatype: Token{ tok_type: K_INT32, value: "int32" }
-          Field name: Token{ tok_type: IDENTIFIER, value: "y" }, datatype: Token{ tok_type: K_INT64, value: "int64" }
-|
-|
-Trait{ Name: Token{ tok_type: IDENTIFIER, value: "hell" } }
-          Funcs{{ }}
-          |
-          |
-          FuncDef{{ }}
-                    |
-                    |
-                    Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "newhell" } }
-                              Parameters {{ }}
-                              ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                    |
-                    |
-                    Block{{ }}
-                           |
-                           |
-                           Return{{ }}
-                                     |
-                                     |
-                                     Expression List{ }, Datatype: yet_to_infer
-                                                  Expression 1
-                                                  |
-                                                  |
-                                                  Primary{ value:Token{ tok_type: INT_LITERAL, value: "0" }, datatype: yet_to_infer }
-|
-|
-Impl{ name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "new" } }
-                          Parameters {{ }}
-                          Field Name: Token{ tok_type: IDENTIFIER, value: "y" }, Datatype: Token{ tok_type: K_INT32, value: "int32" }
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: yet_to_infer
-                                              Expression 1
-                                              |
-                                              |
-                                              Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "y" }, Datatype:yet_to_infer }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "new2" } }
-                          Parameters {{ }}
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: yet_to_infer
-                                              Expression 1
-                                              |
-                                              |
-                                              Primary{ value:Token{ tok_type: INT_LITERAL, value: "10" }, datatype: yet_to_infer }
-|
-|
-Impl{ name: Token{ tok_type: IDENTIFIER, value: "hello" }, trait_name: Token{ tok_type: IDENTIFIER, value: "hell" } }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "newhell" } }
-                          Parameters {{ }}
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: yet_to_infer
-                                              Expression 1
-                                              |
-                                              |
-                                              Primary{ value:Token{ tok_type: INT_LITERAL, value: "20" }, datatype: yet_to_infer }
-|
-|
-FuncDef{{ }}
-          |
-          |
-          Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "main2" } }
-                    Parameters {{ }}
-                    ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-          |
-          |
-          Block{{ }}
-                 |
-                 |
-                 Return{{ }}
-                           |
-                           |
-                           Expression List{ }, Datatype: yet_to_infer
-                                        Expression 1
-                                        |
-                                        |
-                                        Primary{ value:Token{ tok_type: INT_LITERAL, value: "10" }, datatype: yet_to_infer }
-|
-|
-FuncDef{{ }}
-          |
-          |
-          Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "main" } }
-                    Parameters {{ }}
-                    ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-          |
-          |
-          Block{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "y" }, Datatype: Some(Token{ tok_type: K_INT32, value: "int32" }) }
-                           No initialization data{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "z" }, Datatype: Some(Token{ tok_type: K_INT64, value: "int64" }) }
-                           No initialization data{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "x" }, Datatype: Some(Token{ tok_type: IDENTIFIER, value: "hello" }) }
-                           Initialization value: {{ }}
-                           |
-                           |
-                           Expression List{ }, Datatype: yet_to_infer
-                                        Expression 1
-                                        |
-                                        |
-                                        StructExpr{ struct_name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-                                                       Token{ tok_type: IDENTIFIER, value: "x" } : 
-                                                            |
-                                                            |
-                                                            Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "y" }, Datatype:yet_to_infer }
-                                                       Token{ tok_type: IDENTIFIER, value: "y" } : 
-                                                            |
-                                                            |
-                                                            Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "z" }, Datatype:yet_to_infer }
-                 |
-                 |
-                 Expression{{ }}
-                              |
-                              |
-                              Expression List{ }, Datatype: yet_to_infer
-                                           Expression 1
-                                           |
-                                           |
-                                           Function Call{{ }}
-                                                        Callee {{ }}
-                                                                  |
-                                                                  |
-                                                                  Get{ object_type yet_to_infer, Name:Token{ tok_type: IDENTIFIER, value: "new" }, Datatype: yet_to_infer }
-                                                                        |
-                                                                        |
-                                                                        Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "x" }, Datatype:yet_to_infer }
-                 |
-                 |
-                 Expression{{ }}
-                              |
-                              |
-                              Expression List{ }, Datatype: yet_to_infer
-                                           Expression 1
-                                           |
-                                           |
-                                           Function Call{{ }}
-                                                        Callee {{ }}
-                                                                  |
-                                                                  |
-                                                                  Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "main2" }, Datatype:yet_to_infer }
-*****************************************************************************************************
-*****************************************************************************************************
-*****************************************************************************************************
-*****************************************************************************************************
-*****************************************************************************************************
+Variable datatype: int32
 Literal expr type: int64
-Exprlist type: int64
+Exprlist type: int32
+Binary expr :::: Lhs type: int32, Rhs type: int32
+Exprlist type: bool
+Variable datatype: int32
+Literal expr type: int64
+Exprlist type: int32
+Binary expr :::: Lhs type: int32, Rhs type: int32
+Exprlist type: int32
+Variable datatype: int32
+Literal expr type: int64
+Exprlist type: int32
+Binary expr :::: Lhs type: int32, Rhs type: int32
+Exprlist type: int32
 Variable datatype: int32
 Exprlist type: int32
 Literal expr type: int64
@@ -684,198 +432,7 @@ Variable datatype: int64
 Exprlist type: object { name: "hello" }
 Variable datatype: object { name: "hello" }
 Exprlist type: yet_to_infer
-Exprlist type: yet_to_infer
-|
-|
-StructDecl{ Name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-          Fields{{ }}
-          Field name: Token{ tok_type: IDENTIFIER, value: "x" }, datatype: Token{ tok_type: K_INT32, value: "int32" }
-          Field name: Token{ tok_type: IDENTIFIER, value: "y" }, datatype: Token{ tok_type: K_INT64, value: "int64" }
-|
-|
-Trait{ Name: Token{ tok_type: IDENTIFIER, value: "hell" } }
-          Funcs{{ }}
-          |
-          |
-          FuncDef{{ }}
-                    |
-                    |
-                    Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "newhell" } }
-                              Parameters {{ }}
-                              ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                    |
-                    |
-                    Block{{ }}
-                           |
-                           |
-                           Return{{ }}
-                                     |
-                                     |
-                                     Expression List{ }, Datatype: int64
-                                                  Expression 1
-                                                  |
-                                                  |
-                                                  Primary{ value:Token{ tok_type: INT_LITERAL, value: "0" }, datatype: int64 }
-|
-|
-Impl{ name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "new" } }
-                          Parameters {{ }}
-                          Field Name: Token{ tok_type: IDENTIFIER, value: "y" }, Datatype: Token{ tok_type: K_INT32, value: "int32" }
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: int32
-                                              Expression 1
-                                              |
-                                              |
-                                              Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "y" }, Datatype:int32 }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "new2" } }
-                          Parameters {{ }}
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: int64
-                                              Expression 1
-                                              |
-                                              |
-                                              Primary{ value:Token{ tok_type: INT_LITERAL, value: "10" }, datatype: int64 }
-|
-|
-Impl{ name: Token{ tok_type: IDENTIFIER, value: "hello" }, trait_name: Token{ tok_type: IDENTIFIER, value: "hell" } }
-      |
-      |
-      FuncDef{{ }}
-                |
-                |
-                Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "newhell" } }
-                          Parameters {{ }}
-                          ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-                |
-                |
-                Block{{ }}
-                       |
-                       |
-                       Return{{ }}
-                                 |
-                                 |
-                                 Expression List{ }, Datatype: int64
-                                              Expression 1
-                                              |
-                                              |
-                                              Primary{ value:Token{ tok_type: INT_LITERAL, value: "20" }, datatype: int64 }
-|
-|
-FuncDef{{ }}
-          |
-          |
-          Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "main2" } }
-                    Parameters {{ }}
-                    ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-          |
-          |
-          Block{{ }}
-                 |
-                 |
-                 Return{{ }}
-                           |
-                           |
-                           Expression List{ }, Datatype: int64
-                                        Expression 1
-                                        |
-                                        |
-                                        Primary{ value:Token{ tok_type: INT_LITERAL, value: "10" }, datatype: int64 }
-|
-|
-FuncDef{{ }}
-          |
-          |
-          Prototype{ Name:Token{ tok_type: IDENTIFIER, value: "main" } }
-                    Parameters {{ }}
-                    ReturnType{ Token{ tok_type: K_INT32, value: "int32" } }
-          |
-          |
-          Block{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "y" }, Datatype: Some(Token{ tok_type: K_INT32, value: "int32" }) }
-                           No initialization data{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "z" }, Datatype: Some(Token{ tok_type: K_INT64, value: "int64" }) }
-                           No initialization data{{ }}
-                 |
-                 |
-                 Var Stmt{ Name: Token{ tok_type: IDENTIFIER, value: "x" }, Datatype: Some(Token{ tok_type: IDENTIFIER, value: "hello" }) }
-                           Initialization value: {{ }}
-                           |
-                           |
-                           Expression List{ }, Datatype: object { name: "hello" }
-                                        Expression 1
-                                        |
-                                        |
-                                        StructExpr{ struct_name: Token{ tok_type: IDENTIFIER, value: "hello" } }
-                                                       Token{ tok_type: IDENTIFIER, value: "x" } : 
-                                                            |
-                                                            |
-                                                            Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "y" }, Datatype:int32 }
-                                                       Token{ tok_type: IDENTIFIER, value: "y" } : 
-                                                            |
-                                                            |
-                                                            Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "z" }, Datatype:int64 }
-                 |
-                 |
-                 Expression{{ }}
-                              |
-                              |
-                              Expression List{ }, Datatype: yet_to_infer
-                                           Expression 1
-                                           |
-                                           |
-                                           Function Call{{ }}
-                                                        Callee {{ }}
-                                                                  |
-                                                                  |
-                                                                  Get{ object_type object { name: "hello" }, Name:Token{ tok_type: IDENTIFIER, value: "new" }, Datatype: yet_to_infer }
-                                                                        |
-                                                                        |
-                                                                        Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "x" }, Datatype:object { name: "hello" } }
-                 |
-                 |
-                 Expression{{ }}
-                              |
-                              |
-                              Expression List{ }, Datatype: yet_to_infer
-                                           Expression 1
-                                           |
-                                           |
-                                           Function Call{{ }}
-                                                        Callee {{ }}
-                                                                  |
-                                                                  |
-                                                                  Identifier{ Name:Token{ tok_type: IDENTIFIER, value: "main2" }, Datatype:yet_to_infer }
+Exprlist type: int64
 Codegen-Prototype: name:hell.newhell
 Codegen-Prototype: num_params:0
 Codegen-Prototype: name:hello.new
@@ -890,10 +447,21 @@ Codegen-Prototype: name:main
 Codegen-Prototype: num_params:0
 Symbol Table: IRSymbolTable {
     variable_table: {
+        "x": PointerValue {
+            ptr_value: Value {
+                name: "x",
+                address: 0x000055634ed9cc60,
+                is_const: false,
+                is_null: false,
+                is_undef: false,
+                llvm_value: "  %x = alloca %hello, align 8",
+                llvm_type: "%hello*",
+            },
+        },
         "y": PointerValue {
             ptr_value: Value {
                 name: "y",
-                address: 0x000055817f4cf3b0,
+                address: 0x000055634ed9ef10,
                 is_const: false,
                 is_null: false,
                 is_undef: false,
@@ -904,23 +472,12 @@ Symbol Table: IRSymbolTable {
         "z": PointerValue {
             ptr_value: Value {
                 name: "z",
-                address: 0x000055817f4cafb0,
+                address: 0x000055634eda37e0,
                 is_const: false,
                 is_null: false,
                 is_undef: false,
                 llvm_value: "  %z = alloca i64, align 8",
                 llvm_type: "i64*",
-            },
-        },
-        "x": PointerValue {
-            ptr_value: Value {
-                name: "x",
-                address: 0x000055817f4d1280,
-                is_const: false,
-                is_null: false,
-                is_undef: false,
-                llvm_value: "  %x = alloca %hello, align 8",
-                llvm_type: "%hello*",
             },
         },
     },
@@ -943,3 +500,81 @@ Symbol Table: IRSymbolTable {
     trait_decls: {},
     func_table: {},
 }
+=======================LLVM IR=======================
+; ModuleID = 'main_mod'
+source_filename = "main_mod"
+
+%hello = type { i32, i64 }
+
+define i32 @hell.newhell() {
+entry:
+  %x = alloca i32, align 4
+  %x.load = load i32, i32* %x, align 4
+  %integer.unsigned.eqeq_ = icmp eq i32 %x.load, 1
+  br i1 %integer.unsigned.eqeq_, label %then, label %else
+
+then:                                             ; preds = %entry
+  %x.load1 = load i32, i32* %x, align 4
+  %integer.add_ = add i32 %x.load1, 1
+  ret i32 %integer.add_
+  br label %ifcont
+
+else:                                             ; preds = %entry
+  %x.load2 = load i32, i32* %x, align 4
+  %integer.add_3 = add i32 %x.load2, 2
+  ret i32 %integer.add_3
+  br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+}
+
+define i32 @hello.new(%hello* %self, i32 %y) {
+entry:
+  %y2 = alloca i32, align 4
+  %self1 = alloca %hello*, align 8
+  store %hello* %self, %hello** %self1, align 8
+  store i32 %y, i32* %y2, align 4
+  %y.load = load i32, i32* %y2, align 4
+  ret i32 %y.load
+  ret void
+}
+
+define i32 @hello.new2(%hello* %self) {
+entry:
+  %self1 = alloca %hello*, align 8
+  store %hello* %self, %hello** %self1, align 8
+  ret i64 10
+  ret void
+}
+
+define i32 @hello.newhell(%hello* %self) {
+entry:
+  %self1 = alloca %hello*, align 8
+  store %hello* %self, %hello** %self1, align 8
+  ret i64 20
+  ret void
+}
+
+define i64 @main2() {
+entry:
+  ret i64 10
+  ret void
+}
+
+define i32 @main() {
+entry:
+  %y = alloca i32, align 4
+  %z = alloca i64, align 8
+  %y.load = load i32, i32* %y, align 4
+  %z.load = load i64, i64* %z, align 4
+  %x = alloca %hello, align 8
+  store %hello { i32 %y.load, i64 %z.load }, %hello* %x, align 4
+  %hello.new..call = call i32 @hello.new(%hello* %x)
+  %main2..call = call i64 @main2()
+  ret i64 %main2..call
+}
+
+=====================================================
+Err(
+    "Basic Block in function \'hell.newhell\' does not have terminator!\nlabel %ifcont\nTerminator found in the middle of a basic block!\nlabel %entry\nFunction return type does not match operand type of return inst!\n  ret void\n i32Function return type does not match operand type of return inst!\n  ret i64 10\n i32Function return type does not match operand type of return inst!\n  ret void\n i32Function return type does not match operand type of return inst!\n  ret i64 20\n i32Function return type does not match operand type of return inst!\n  ret void\n i32Terminator found in the middle of a basic block!\nlabel %entry\nFunction return type does not match operand type of return inst!\n  ret void\n i64Use of instruction is not an instruction!\n  %y.load = load i32, i32* %y, align 4\nUse of instruction is not an instruction!\n  %z.load = load i64, i64* %z, align 4\nIncorrect number of arguments passed to called function!\n  %hello.new..call = call i32 @hello.new(%hello* %x)\nFunction return type does not match operand type of return inst!\n  ret i64 %main2..call\n i32",
+)

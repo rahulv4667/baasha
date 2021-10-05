@@ -27,7 +27,8 @@ pub struct Lexer {
     start: usize,
     program: String,
     str_vec: Vec<String>,
-    tokens: Vec<Token>
+    tokens: Vec<Token>,
+    has_errors: bool
 }
 
 
@@ -42,7 +43,8 @@ impl Lexer {
             start: 0,
             program: String::new(),
             str_vec: Vec::new(),
-            tokens: Vec::new()
+            tokens: Vec::new(),
+            has_errors: false
         }
     }
 
@@ -167,6 +169,7 @@ impl Lexer {
         let mut is_int: bool;
         while Self::is_digit(self.peek()) && !self.is_end() { self.advance(); }
         if self.is_end() {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, self.col, 
                 self.line_num, "Unterminated integer/float literal".to_string());
         }
@@ -175,6 +178,7 @@ impl Lexer {
 
         while Self::is_digit(self.peek()) && !self.is_end() { self.advance(); }
         if self.is_end() {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, self.col, 
                 self.line_num, "Unterminated integer/float literal".to_string());
         }
@@ -187,6 +191,7 @@ impl Lexer {
 
         while Self::is_digit(self.peek()) && !self.is_end() { self.advance(); }
         if self.is_end() {
+            self.has_errors = true;
             logger::log_message(logger::LogLevel::ERROR, self.col, 
                 self.line_num, "Unterminated integer/float literal".to_string());
         }
@@ -209,7 +214,9 @@ impl Lexer {
         }
 
         if self.curr() == "\0" {
-            logger::log_message(logger::LogLevel::ERROR, self.col, self.line_num, "Unterminated string".to_string());
+            self.has_errors = true;
+            logger::log_message(logger::LogLevel::ERROR, self.col, self.line_num, 
+                "Unterminated string".to_string());
         }
 
         // closing quote
@@ -230,7 +237,9 @@ impl Lexer {
         }
 
         if self.is_end() {
-            logger::log_message(logger::LogLevel::ERROR, self.col, self.line_num, "Unterminated identifier".to_string());
+            self.has_errors = true;
+            logger::log_message(logger::LogLevel::ERROR, self.col, self.line_num, 
+                "Unterminated identifier".to_string());
         }
 
         return self.recognize_identifier();
@@ -422,7 +431,7 @@ impl Lexer {
     }
 
     
-    pub fn tokenize(&mut self, program: String) -> Vec<Token> {
+    pub fn tokenize(&mut self, program: String) -> (Vec<Token>, bool) {
         self.program = program;
         // let char_vec = self.program.graphemes(true).collect::<Vec<&str>>();
         self.str_vec = Vec::new();
@@ -439,7 +448,7 @@ impl Lexer {
         self.tokens.push(Token { tok_type: TokenType::FILE_EOF, value: String::new(), line: usize::MAX, col: usize::MAX });
         
     
-        return self.tokens.clone();
+        return (self.tokens.clone(), self.has_errors);
     }
 
     pub fn print_tokens(&self) {

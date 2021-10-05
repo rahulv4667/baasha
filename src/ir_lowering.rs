@@ -34,7 +34,7 @@ pub struct Codegen<'a, 'ctx> {
     pub symbol_table: IRSymbolTable<'ctx>,
     pub current_scope: globals::Scope,
     pub curr_fn_value : Option<FunctionValue<'ctx>>,
-    pub is_parsing_lvalue: bool 
+    pub is_parsing_lvalue: bool
 }
 
 
@@ -904,6 +904,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         };
 
         self.symbol_table = prev_env;
+        // self.symbol_table.func_table = 
 
         return Some(body);
         // if function.verify(true) {}
@@ -947,6 +948,35 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         then_block: &Box<Stmt>,
         else_block: &Option<Box<Stmt>>
     ) -> Option<inkwell::values::AnyValueEnum<'ctx>> { 
+        let current_fn = self.curr_fn_value.unwrap();
+
+        let cond = self.visit_expr(condition).into_int_value();
+
+        let then_bb = self.context.append_basic_block(current_fn, "then");
+        let else_bb = self.context.append_basic_block(current_fn, "else");
+        let cont_bb = self.context.append_basic_block(current_fn, "ifcont");
+
+        self.builder.build_conditional_branch(cond, then_bb, else_bb);
+
+        // build then block
+        self.builder.position_at_end(then_bb);
+        self.visit_stmt(then_block)?;
+        self.builder.build_unconditional_branch(cont_bb);
+
+        let then_bb = self.builder.get_insert_block().unwrap();
+
+        // build else block
+        self.builder.position_at_end(else_bb);
+        if else_block.is_some() {
+            self.visit_stmt(else_block.as_ref().unwrap());
+        }
+        self.builder.build_unconditional_branch(cont_bb);
+        let else_bb = self.builder.get_insert_block().unwrap();
+
+        // emti merge block
+        self.builder.position_at_end(cont_bb);
+
+        return None;
         unimplemented!(); 
     }
 
@@ -962,8 +992,19 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     fn visit_return_stmt(&mut self, expr: &Box<Expr>)
     -> Option<inkwell::values::AnyValueEnum<'ctx>> { 
-        return Some(self.visit_expr(expr).as_any_value_enum());
-        // unimplemented!(); 
+        return Some(
+            AnyValueEnum::InstructionValue(
+                match self.visit_expr(expr) {
+                    BasicValueEnum::ArrayValue(a) => self.builder.build_return(Some(&a)),
+                    BasicValueEnum::FloatValue(f) => self.builder.build_return(Some(&f)),
+                    BasicValueEnum::IntValue(i) => self.builder.build_return(Some(&i)),
+                    BasicValueEnum::PointerValue(p) => self.builder.build_return(Some(&p)),
+                    BasicValueEnum::StructValue(s)  => self.builder.build_return(Some(&s)),
+                    BasicValueEnum::VectorValue(v) => self.builder.build_return(Some(&v))
+                }
+            )
+        );
+
     }
 
     fn visit_for_stmt(&mut self, 
@@ -973,7 +1014,48 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         updation: &Option<Box<Expr>>,
         block: &Box<Stmt>
     ) -> Option<inkwell::values::AnyValueEnum<'ctx>> { 
-        unimplemented!(); 
+        let current_fn = self.curr_fn_value.unwrap();
+
+        let prev_env = self.symbol_table.clone();
+        
+        if initialization.is_some() {
+            self.visit_expr(initialization.as_ref().unwrap());
+        }
+
+        let cond_bb = self.context.append_basic_block(current_fn, "condbr");
+        let loop_bb = self.context.append_basic_block(current_fn, "loopbr");
+        let cont_bb = self.context.append_basic_block(current_fn, "contbr");
+
+        // jumping to condbr 
+        self.builder.build_unconditional_branch(cond_bb);
+        self.builder.position_at_end(cond_bb);
+
+        // emitting condition to condbr and jumping to loop_bb if true
+        if(condition.is_some()) {
+            let condres = self.visit_expr(condition.as_ref().unwrap()).into_int_value();
+            self.builder.build_conditional_branch(condres, loop_bb, cont_bb);
+        } else {
+            // infinite loop
+            self.builder.build_unconditional_branch(loop_bb);
+        }
+        let cond_bb = self.builder.get_insert_block().unwrap();
+        
+        // emit body and updation in loopbr
+        self.builder.position_at_end(loop_bb);
+        self.visit_stmt(block);
+        if updation.is_some() {
+            self.visit_expr(updation.as_ref().unwrap());
+        }
+
+        // go unconditionally to condbr from loopbr
+        self.builder.build_unconditional_branch(cond_bb);
+        let loop_bb = self.builder.get_insert_block().unwrap();
+
+        // switching to cont_bb
+        self.builder.position_at_end(cont_bb);
+                
+        return None;
+        // unimplemented!(); 
     }
 
     fn visit_expression_stmt(&mut self, expr: &Box<Expr>)
@@ -999,10 +1081,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             match val {
                 BasicValueEnum::ArrayValue(v)      => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::FloatValue(v)      => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::FunctionValue(v)  => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::InstructionValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::IntValue(v)          => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::PhiValue(v)       => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::PointerValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::StructValue(v)     => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::VectorValue(v)     => self.builder.build_store(val_ptr, v),
@@ -1010,10 +1089,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     self.get_type(datatype.as_ref().unwrap()).const_zero()),
             };
     
-            // self.symbol_table.variable_table.insert(
-            //     name.value.clone(), 
-            //     BasicValueEnum::<'ctx>::PointerValue(val_ptr)
-            // );
             self.symbol_table.variable_table.insert(
                 name.value.clone(), 
                 val_ptr
@@ -1029,10 +1104,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             match val {
                 BasicValueEnum::ArrayValue(v)      => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::FloatValue(v)      => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::FunctionValue(v)  => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::InstructionValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::IntValue(v)          => self.builder.build_store(val_ptr, v),
-                // AnyValueEnum::PhiValue(v)       => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::PointerValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::StructValue(v)     => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::VectorValue(v)     => self.builder.build_store(val_ptr, v),
@@ -1040,10 +1112,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                     self.get_type(datatype.as_ref().unwrap()).const_zero()),
             };
     
-            // self.symbol_table.variable_table.insert(
-            //     name.value.clone(), 
-            //     BasicValueEnum::<'ctx>::PointerValue(val_ptr)
-            // );
             self.symbol_table.variable_table.insert(
                 name.value.clone(), 
                 val_ptr
@@ -1055,9 +1123,6 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         if datatype.is_some() {
             let dtype = self.get_type(datatype.as_ref().unwrap());
             let val_ptr = self.builder.build_alloca(dtype, &name.value);
-            // self.symbol_table.variable_table.insert(
-            //     name.value.clone(), 
-            //     BasicValueEnum::<'ctx>::PointerValue(val_ptr));
             self.symbol_table.variable_table.insert(
                 name.value.clone(), 
                 val_ptr

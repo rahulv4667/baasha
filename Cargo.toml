@@ -8,4 +8,5 @@ edition = "2018"
 [dependencies]
 unicode-segmentation = "1.8.0"
 inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
+clap = "2.33.3"
 # generational-arena = "0.2"
