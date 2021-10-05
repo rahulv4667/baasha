@@ -47,7 +47,6 @@ func main() -> int32  {
     x.new();
     main2();
     
-    //hello{x:y, y:z};
     
     
     //x.x = 10;
