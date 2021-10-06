@@ -508,7 +508,8 @@ impl Parser {
 
         let mut initialization_value: Option<Box<Expr>> = None;
         if self.match_(TokenType::EQUAL) {
-            initialization_value = self.expression();
+            // initialization_value = self.expression();
+            initialization_value = self.logical_OR_expr();
         }
 
         if typename.is_none() && initialization_value.is_none() {

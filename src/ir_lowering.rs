@@ -6,6 +6,7 @@
 
 use std::collections::HashMap;
 
+use inkwell::data_layout::DataLayout;
 // use inkwell::basic_block::BasicBlock;
 // use inkwell::builder;
 use inkwell::types::{BasicTypeEnum, StringRadix};
@@ -13,7 +14,7 @@ use inkwell::types::{BasicTypeEnum, StringRadix};
 // use inkwell::types::AnyTypeEnum;
 // use inkwell::types::IntType;
 // use inkwell::types::AnyTypeEnum;
-use inkwell::values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, FunctionValue, IntValue};
+use inkwell::values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, FunctionValue, InstructionValue, IntValue};
 
 use crate::globals::{self, Scope, TokenType};
 use crate::lexer::Token;
@@ -737,6 +738,60 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     }
 
 
+    fn visit_object_assignment_expr(
+        &mut self, 
+        target: &Box<Expr>, 
+        operator: &Token, 
+        expr: &Box<Expr>,
+        datatype: &Datatype
+    ) -> inkwell::values::BasicValueEnum<'ctx> {
+
+        let is_lvalue_parsing = self.is_parsing_lvalue;
+        self.is_parsing_lvalue = true;
+        let lhs_ptr = self.visit_expr(target);
+        self.is_parsing_lvalue = is_lvalue_parsing;
+        println!("Codegen-ObjAssignExpr: LHS: {:#?}", lhs_ptr);
+
+        if let Datatype::object{name} = datatype {
+            if let Decl::StructDecl{name, fields:fields_decl} 
+                = self.symbol_table.struct_decls.get(name).unwrap()
+            {
+                
+                
+                println!("Codegen-ObjAssignExpr: StructDecl: {:#?}", fields_decl.clone());
+                println!("Codegen-ObjAssignExpr: Expr: {:#?}", expr.clone());
+                let mut field_name_index_map = HashMap::new();
+                for (i, (field_name, _)) in fields_decl.into_iter().enumerate() {
+                    field_name_index_map.insert(field_name.value.clone(), i);
+                }
+
+                if let Expr::StructExpr{struct_name, fields, datatype}
+                    = &**expr 
+                {
+                    println!("Codegen-ObjAssignExpr: Fields: {:#?}", fields.clone());
+                    for (i, (field_name, field_expr)) in fields.into_iter().enumerate() {
+                        let igep = self.builder.build_struct_gep(
+                            lhs_ptr.into_pointer_value(), 
+                            *field_name_index_map.get(&field_name.value).unwrap() as u32, 
+                            field_name.value.as_str()
+                        ).unwrap();
+                        let field_val = self.visit_expr(field_expr);
+                        self.builder.build_store(igep, field_val);
+                    }
+
+                }
+            }
+        }
+
+        if self.is_parsing_lvalue {
+            return lhs_ptr;
+        } else {
+            return self.builder.build_load(lhs_ptr.into_pointer_value(), "ptr.load");
+        }
+        // unimplemented!();
+    }
+
+
     fn visit_struct_decl(&mut self, name: &Token, fields: &Vec<(Token, Token)>)
     -> Option<inkwell::values::AnyValueEnum<'ctx>> {
         self.symbol_table.struct_decls.insert(
@@ -892,15 +947,24 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
 
         let body = self.visit_stmt(block)?;
+        
         match body {
             // only basic blocks.
-            AnyValueEnum::ArrayValue(a) => self.builder.build_return(Some(&a)),
-            AnyValueEnum::FloatValue(f) => self.builder.build_return(Some(&f)),
-            AnyValueEnum::IntValue(i)   => self.builder.build_return(Some(&i)),
-            AnyValueEnum::PointerValue(p)   => self.builder.build_return(Some(&p)),
-            AnyValueEnum::StructValue(s)    => self.builder.build_return(Some(&s)),
-            AnyValueEnum::VectorValue(v)    => self.builder.build_return(Some(&v)),
-            _ => self.builder.build_return(None)
+            AnyValueEnum::ArrayValue(a)             => {self.builder.build_return(Some(&a));},
+            AnyValueEnum::FloatValue(f)             => {self.builder.build_return(Some(&f));},
+            AnyValueEnum::IntValue(i)                 => {self.builder.build_return(Some(&i));},
+            AnyValueEnum::PointerValue(p)          => {self.builder.build_return(Some(&p));},
+            AnyValueEnum::StructValue(s)           => {self.builder.build_return(Some(&s));},
+            AnyValueEnum::VectorValue(v)           => {self.builder.build_return(Some(&v));},
+            AnyValueEnum::InstructionValue(_)
+            |AnyValueEnum::FunctionValue(_)
+            |AnyValueEnum::PhiValue(_) => {
+                // self.builder.build_return(
+                //     Some(
+                //         &self.get_type(proto_return).const_zero()
+                //     )
+                // );
+            }
         };
 
         self.symbol_table = prev_env;
@@ -960,21 +1024,92 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         // build then block
         self.builder.position_at_end(then_bb);
-        self.visit_stmt(then_block)?;
+        let then_ret = self.visit_stmt(then_block)?;
         self.builder.build_unconditional_branch(cont_bb);
 
         let then_bb = self.builder.get_insert_block().unwrap();
 
         // build else block
         self.builder.position_at_end(else_bb);
+        let mut else_ret: AnyValueEnum;
         if else_block.is_some() {
-            self.visit_stmt(else_block.as_ref().unwrap());
+            else_ret = self.visit_stmt(else_block.as_ref().unwrap())?;
+        } else {
+            else_ret = then_ret.clone();
         }
         self.builder.build_unconditional_branch(cont_bb);
         let else_bb = self.builder.get_insert_block().unwrap();
 
         // emti merge block
         self.builder.position_at_end(cont_bb);
+        println!("Codegen-IfStmt: Then_val: {:#?}", then_ret);
+        println!("Codegen-IfStmt: Else_val: {:#?}", else_ret);
+        match then_ret {
+            AnyValueEnum::ArrayValue(a) => {
+                let phi = self.builder.build_phi(a.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&a, then_bb),
+                    (&else_ret.into_array_value(), else_bb)
+                ]);
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::ArrayValue(phi.as_basic_value().into_array_value()));
+            },
+            AnyValueEnum::FloatValue(f) => {
+                let phi = self.builder.build_phi(f.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&f, then_bb),
+                    (&else_ret.into_float_value(), else_bb)
+                ]);
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::FloatValue(phi.as_basic_value().into_float_value()));
+            },
+            AnyValueEnum::IntValue(i)     => {
+                let phi = self.builder.build_phi(i.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&i, then_bb),
+                    (&else_ret.into_int_value(), else_bb)
+                ]);
+                
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::IntValue(phi.as_basic_value().into_int_value()));
+            },
+            AnyValueEnum::PointerValue(p)   => {
+                let phi = self.builder.build_phi(p.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&p, then_bb),
+                    (&else_ret.into_pointer_value(), else_bb)
+                ]);
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::PointerValue(phi.as_basic_value().into_pointer_value()));
+
+            },
+            AnyValueEnum::StructValue(s) => {
+                let phi = self.builder.build_phi(s.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&s, then_bb),
+                    (&else_ret.into_struct_value(), else_bb)
+                ]);
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::StructValue(phi.as_basic_value().into_struct_value()));
+            },
+            AnyValueEnum::VectorValue(v) => {
+                let phi = self.builder.build_phi(v.get_type(), "ifphi");
+                phi.add_incoming(&[
+                    (&v, then_bb),
+                    (&else_ret.into_vector_value(), else_bb)
+                ]);
+                println!("Codegen-IfStmt: {:#?}", phi.print_to_string().to_str());
+                return Some(AnyValueEnum::VectorValue(phi.as_basic_value().into_vector_value()));
+            },
+            AnyValueEnum::PhiValue(p) => {
+            },
+            AnyValueEnum::InstructionValue(i) => {
+            },
+            AnyValueEnum::FunctionValue(f) => {}
+        }
+        // let phi = self.builder.build_phi(then_ret.get_type(), "ifphi");
+        
+        // phi.add_incoming(&[(&then_ret, then_bb), (&else_ret, else_bb)]);
 
         return None;
         unimplemented!(); 
@@ -992,9 +1127,10 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
     fn visit_return_stmt(&mut self, expr: &Box<Expr>)
     -> Option<inkwell::values::AnyValueEnum<'ctx>> { 
+        let expr_val = self.visit_expr(expr);
         return Some(
             AnyValueEnum::InstructionValue(
-                match self.visit_expr(expr) {
+                match expr_val {
                     BasicValueEnum::ArrayValue(a) => self.builder.build_return(Some(&a)),
                     BasicValueEnum::FloatValue(f) => self.builder.build_return(Some(&f)),
                     BasicValueEnum::IntValue(i) => self.builder.build_return(Some(&i)),
@@ -1004,6 +1140,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 }
             )
         );
+
+        
+        // return Some(expr_val.as_any_value_enum());
 
     }
 
@@ -1074,10 +1213,47 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
     -> Option<inkwell::values::AnyValueEnum<'ctx>> {
 
         if datatype.is_some() && initialization_value.is_some() {
-            let val = self.visit_expr(initialization_value.as_ref().unwrap());
+            
             let dtype = self.get_type(datatype.as_ref().unwrap());
             let val_ptr = self.builder.build_alloca(dtype, &name.value);
+    
+            self.symbol_table.variable_table.insert(
+                name.value.clone(), 
+                val_ptr
+            );
 
+            if datatype.as_ref().unwrap().tok_type == TokenType::IDENTIFIER {
+                // if struct, creating a custom assignment expression.
+                println!("Codegen-VarStmt: name: {:#?}, datatype: {:#?}, init_value: {:#?}", 
+                    name, datatype, initialization_value);
+                let dtype = self.get_type(datatype.as_ref().unwrap());
+                let dtype_datatype = Datatype::get_tok_datatype(datatype.as_ref().unwrap());
+                let var_expr = Expr::Variable{
+                    name: name.clone(), 
+                    datatype: dtype_datatype.clone(),
+                    struct_name: Some(datatype.as_ref().unwrap().value.clone())
+                };
+
+                let assignment_expr = Expr::Assignment{
+                    target: Box::new(var_expr.clone()),
+                    operator: Token { 
+                        tok_type: TokenType::EQUAL, 
+                        value: "=".to_string(), 
+                        line: usize::MAX, 
+                        col: usize::MAX 
+                    },
+                    expr: initialization_value.as_ref().unwrap().clone(),
+                    datatype: dtype_datatype.clone()
+                };
+                
+                let val = self.visit_expr(&assignment_expr).as_any_value_enum();
+                println!("Codegen-VarStmt: VarExpr: {:#?}", var_expr);
+                println!("Codegen-VarStmt: AssignmentExpr: {:#?}", assignment_expr);
+                println!("Codegen-VarStmt: Result: {:#?}", val);
+                return Some(val);
+            }
+
+            let val = self.visit_expr(initialization_value.as_ref().unwrap());
             match val {
                 BasicValueEnum::ArrayValue(v)      => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::FloatValue(v)      => self.builder.build_store(val_ptr, v),
@@ -1085,14 +1261,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 BasicValueEnum::PointerValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::StructValue(v)     => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::VectorValue(v)     => self.builder.build_store(val_ptr, v),
-                _ => self.builder.build_store(val_ptr, 
-                    self.get_type(datatype.as_ref().unwrap()).const_zero()),
             };
-    
-            self.symbol_table.variable_table.insert(
-                name.value.clone(), 
-                val_ptr
-            );
             return Some(AnyValueEnum::PointerValue(val_ptr));
         }
 
@@ -1100,7 +1269,40 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
             let val = self.visit_expr(initialization_value.as_ref().unwrap());
             let dtype = val.get_type();
             let val_ptr = self.builder.build_alloca(dtype, &name.value);
+    
+            self.symbol_table.variable_table.insert(
+                name.value.clone(), 
+                val_ptr
+            );
 
+
+            if let BasicValueEnum::StructValue(s) = val {
+                // if struct, create a custom assignment expr. 
+                // This will evaluate `initialization_value` again.
+
+                let var_expr = Box::new(Expr::Variable{
+                    name: name.clone(),
+                    datatype: Datatype::object{name:s.get_type().get_name()?.to_str().unwrap().to_string()},
+                    struct_name: Some(s.get_type().get_name()?.to_str().unwrap().to_string()),
+                });
+
+                let assignment_expr = Expr::Assignment{
+                    target: var_expr,
+                    operator: Token { 
+                        tok_type: TokenType::EQUAL,  
+                        value: "=".to_string(), 
+                        line: usize::MAX, 
+                        col: usize::MAX
+                    },
+                    expr: initialization_value.as_ref().unwrap().clone(),
+                    datatype: Datatype::object{name:s.get_type().get_name()?.to_str().unwrap().to_string()},
+                };
+
+                let val = self.visit_expr(&assignment_expr);
+                return Some(val.as_any_value_enum());
+            }
+
+            // if not, store the val already calculated
             match val {
                 BasicValueEnum::ArrayValue(v)      => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::FloatValue(v)      => self.builder.build_store(val_ptr, v),
@@ -1108,14 +1310,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 BasicValueEnum::PointerValue(v)   => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::StructValue(v)     => self.builder.build_store(val_ptr, v),
                 BasicValueEnum::VectorValue(v)     => self.builder.build_store(val_ptr, v),
-                _ => self.builder.build_store(val_ptr, 
-                    self.get_type(datatype.as_ref().unwrap()).const_zero()),
             };
-    
-            self.symbol_table.variable_table.insert(
-                name.value.clone(), 
-                val_ptr
-            );
             return Some(AnyValueEnum::PointerValue(val_ptr));
         }
             
@@ -1142,6 +1337,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 // return BasicValueEnum::PointerValue(var_ptr.into_pointer_value());
                 return BasicValueEnum::PointerValue(*var_ptr);
             }
+            println!("Codegen-VariableExpr: {:#?}", var_ptr);
             return self.builder.build_load(
                 // var_ptr.into_pointer_value(), 
                 *var_ptr,
@@ -1374,19 +1570,36 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
 
         let mut struct_field_vals = vec![];
+        // println!("");
         struct_field_vals.reserve(field_name_index_map.len());
         for (field_name, field_expr) in fields {
+            
+            let field_val = self.visit_expr(field_expr);
+            println!("COdegen-structexpr-Fieldval: {:#?}, clone: {:#?}", field_val, field_val.clone());
+            // let field_v = match field_val {
+            //     BasicValueEnum::ArrayValue(a) 
+            //     => BasicValueEnum::ArrayValue(a),
+            //     BasicValueEnum::FloatValue(f) 
+            //     => BasicValueEnum::FloatValue(f)
+            // };
 
-            struct_field_vals.insert(*field_name_index_map.get(&field_name.value).unwrap(), self.visit_expr(field_expr));
-            // struct_field_vals[field_name_index_map.get(&field_name.value).unwrap()] = self.visit_expr(field_expr);
+            struct_field_vals.insert(
+                *field_name_index_map.get(&field_name.value).unwrap(), 
+                field_val.clone());
         }
 
+        
         return BasicValueEnum::StructValue(struct_type.const_named_struct(&struct_field_vals));
         unimplemented!(); 
     }
 
     fn visit_assignment_expr(&mut self, target: &Box<Expr>, operator: &Token, expr: &Box<Expr>, datatype: &Datatype)
     -> inkwell::values::BasicValueEnum<'ctx> { 
+
+        if let Datatype::object{..} = datatype {
+            return self.visit_object_assignment_expr(target, operator, expr, datatype);
+        }
+
         self.is_parsing_lvalue = true;
         let lhs_ptr = self.visit_expr(target); /* Should be pointer */
         self.is_parsing_lvalue = false;
@@ -1395,7 +1608,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
         match operator.tok_type {
             TokenType::EQUAL => {
-                println!("COdegen-AssignmentExpr: TokenType::EQUAL");
+                println!("Codegen-AssignmentExpr: TokenType::EQUAL");
                 self.builder.build_store(
                 lhs_ptr.into_pointer_value(), 
                 rhs_val

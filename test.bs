@@ -1,16 +1,21 @@
 struct hello {
     x: int32,
-    y: int64
+    y: int32
 }
 
 trait hell {
     func newhell() -> int32 {
         //return 0;
         var x: int32;
-        if x == (1 as int32) {
-            return x+(1 as int32);
+        //if x == (1 as int32) {
+        //    return x+(1 as int32);
+        //} else {
+        //    return x+(2 as int32);
+        //}
+        return if x == (1 as int32) {
+            x+(1 as int32);
         } else {
-            return x+(2 as int32);
+            x+(2 as int32);
         }
     }
 }
@@ -21,13 +26,13 @@ impl hello {
     }
 
     func new2() -> int32 {
-        return 10;
+        return (10 as int32);
     }
 }
 
 impl hell for hello {
     func newhell() -> int32 {
-        return 20;
+        return (20 as int32);
     }
 }
 
@@ -36,7 +41,7 @@ func main2() -> int64 {
     return 10;
 }
 
-func main() -> int32  {
+func main() -> int64  {
     //a = 20 as int32, 10 as int64;
     //x.b.c(a, b);
     //a = x.b();
@@ -49,10 +54,14 @@ func main() -> int32  {
     //if z == (x+y) {}
     
     var y: int32;
-    var z: int64;
+    var z: int32;
+    y = 10 as int32;
     var x: hello = hello{x: y, y: z};
-    x.new();
+    //x = hello{x: y, y: z};
+    x.x = 10 as int32;
+    x.new(y);
     main2();
+    return 10;
     
     
     
