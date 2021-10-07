@@ -157,7 +157,7 @@ impl Parser {
 
     // declaration -> structDecl | implDecl | traitDecl | funcDef
     fn declaration(&mut self) -> Option<Box<Decl>> {
-        println!("In declaration()");
+        eprintln!("In declaration()");
         if      self.match_(TokenType::K_STRUCT)    { return self.struct_declaration(); }
         else if self.match_(TokenType::K_IMPL)      { return self.impl_declaration(); }
         else if self.match_(TokenType::K_TRAIT)     { return self.trait_declaration(); }
@@ -167,7 +167,7 @@ impl Parser {
 
     // structDecl -> "struct" IDENTIFIER "{" (IDENTIFIER ("," IDENTIFIER)*) ":" TYPES "}"
     fn struct_declaration(&mut self) -> Option<Box<Decl>>   { 
-        println!("In struct_declaration()");
+        eprintln!("In struct_declaration()");
         let name: Token;
         match self.consume(TokenType::IDENTIFIER, 
             "Expected identifier after 'struct' keyword".to_string()) {
@@ -229,7 +229,7 @@ impl Parser {
     }
 
     fn impl_declaration(&mut self) -> Option<Box<Decl>>     { 
-        println!("In impl_declaration()");
+        eprintln!("In impl_declaration()");
         let mut name: Token;
         let trait_name: Option<Token>;
 
@@ -297,7 +297,7 @@ impl Parser {
 
 
     fn trait_declaration(&mut self) -> Option<Box<Decl>>    { 
-        println!("In trait_declaration()");
+        eprintln!("In trait_declaration()");
         let name: Token;
         match self.consume(TokenType::IDENTIFIER, 
             "Expected trait name after 'trait' keyword".to_string()) {
@@ -336,7 +336,7 @@ impl Parser {
     
     // func -> prototype (";" | block)
     fn func(&mut self) -> Option<Box<Decl>>  { 
-        println!("In block()");
+        eprintln!("In block()");
         let prototype: Box<Decl>;
         match self.prototype() {
             Some(proto) => prototype = proto,
@@ -353,7 +353,7 @@ impl Parser {
     }
 
     fn prototype(&mut self) -> Option<Box<Decl>> { 
-        println!("In prototype()");
+        eprintln!("In prototype()");
         let name: Token;
         match self.consume(TokenType::IDENTIFIER, 
             "Expected function name after 'func' keyword".to_string()) {
@@ -442,7 +442,7 @@ impl Parser {
     }
 
     fn block(&mut self) -> Option<Box<Stmt>> { 
-        println!("In block()");
+        eprintln!("In block()");
         match self.consume(TokenType::CURLY_OPEN, 
             "Expected '{' at starting of a block".to_string()) {
                 Some(_) => (),
@@ -461,7 +461,7 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Option<Box<Stmt>> { 
-        println!("In statement()");
+        eprintln!("In statement()");
         match self.peek() {
             Some(Token{tok_type, ..}) => {
                 match tok_type {
@@ -473,7 +473,7 @@ impl Parser {
                     TokenType::K_STRUCT|TokenType::K_IMPL|
                     TokenType::K_TRAIT|TokenType::K_FUNC => self.decl_stmt(),
                     TokenType::SEMICOLON    => {self.match_(TokenType::SEMICOLON); None},
-                    TokenType::FILE_EOF     => {println!("Peek:{:?}", self.peek());self.advance(); None},
+                    TokenType::FILE_EOF     => {eprintln!("Peek:{:?}", self.peek());self.advance(); None},
                     _ => self.expr_stmt()
                 }
             },
@@ -482,7 +482,7 @@ impl Parser {
     }
 
     fn decl_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In decl_stmt()");
+        eprintln!("In decl_stmt()");
         match self.declaration() {
             Some(decl) => Some(Box::new(Stmt::Decl{decl})),
             _ => None,
@@ -490,7 +490,7 @@ impl Parser {
     }
 
     fn var_stmt(&mut self) -> Option<Box<Stmt>> {
-        println!("In var_stmt()");
+        eprintln!("In var_stmt()");
         self.consume(TokenType::K_VAR, "Expected 'var' keyword".to_string());
 
         let name: Token;
@@ -524,7 +524,7 @@ impl Parser {
     }
 
     fn if_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In if_stmt()");
+        eprintln!("In if_stmt()");
         let if_token:Token;
         match self.consume(TokenType::K_IF, "Expected `if` statement".to_string()) {
             Some(tok) => if_token = tok,
@@ -560,7 +560,7 @@ impl Parser {
     }
 
     fn while_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In while_stmt()");
+        eprintln!("In while_stmt()");
         self.consume(TokenType::K_WHILE, "Expected 'while' keyword".to_string());
 
         let condition: Box<Expr>;
@@ -580,7 +580,7 @@ impl Parser {
 
     
     fn for_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In for stmt()");
+        eprintln!("In for stmt()");
         let for_token: Token;
         match self.consume(TokenType::K_FOR, "Expected 'for' keyword".to_string()) {
             Some(tok) => for_token = tok,
@@ -662,7 +662,7 @@ impl Parser {
 
 
     fn return_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In return_stmt()");
+        eprintln!("In return_stmt()");
         match self.consume(TokenType::K_RETURN, "Expected 'return' keyword".to_string()) {
             Some(_) => (),
             _ => return None,
@@ -677,7 +677,7 @@ impl Parser {
     
 
     fn expr_stmt(&mut self) -> Option<Box<Stmt>> { 
-        println!("In expr_stmt()");
+        eprintln!("In expr_stmt()");
         // match self.assignment() {
         //     Some(expr) => Some(Box::new(Stmt::Expression{expr})),
         //     _ => match self.expression() {
@@ -708,7 +708,7 @@ impl Parser {
 
 
     fn expression(&mut self) -> Option<Box<Expr>> { 
-        println!("In expression()");
+        eprintln!("In expression()");
         let mut expr_list: Vec<Box<Expr>> = vec![];
 
         match self.assignment() {
@@ -740,7 +740,7 @@ impl Parser {
     }
 
     fn expression_list(&mut self) -> Vec<Box<Expr>> { 
-        println!("In expression_list()");
+        eprintln!("In expression_list()");
         let mut expr_list: Vec<Box<Expr>> = vec![];
 
         match /*self.expression()*/self.logical_OR_expr() {
@@ -759,7 +759,7 @@ impl Parser {
     }
 
     fn target(&mut self) -> Option<Box<Expr>> { 
-        println!("In target()");
+        eprintln!("In target()");
         let mut atom: Box<Expr>;
         match self.consume(TokenType::IDENTIFIER, 
             "L-value needs to be either variable or attribute reference".to_string()) {
@@ -784,7 +784,7 @@ impl Parser {
     }
 
     fn target_list(&mut self) -> Vec<Box<Expr>> { 
-        println!("In target_list()");
+        eprintln!("In target_list()");
         let mut tar_list: Vec<Box<Expr>> = vec![];
 
         match self.target() {
@@ -826,7 +826,7 @@ impl Parser {
     }
 
     fn assignment(&mut self) -> Option<Box<Expr>> { 
-        println!("In assignment()");
+        eprintln!("In assignment()");
         let lhs = self.logical_OR_expr();
         if lhs.is_none() { return None; }
 
@@ -867,7 +867,7 @@ impl Parser {
 
     #[allow(non_snake_case)]
     fn logical_OR_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In logical_OR_expr()");
+        eprintln!("In logical_OR_expr()");
         let mut lhs: Box<Expr>;
 
         match self.logical_AND_expr() {
@@ -898,7 +898,7 @@ impl Parser {
 
     #[allow(non_snake_case)]
     fn logical_AND_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In logical_AND_expr()");
+        eprintln!("In logical_AND_expr()");
         let mut lhs: Box<Expr>;
 
         match self.inclusive_OR_expr() {
@@ -928,7 +928,7 @@ impl Parser {
 
     #[allow(non_snake_case)]
     fn inclusive_OR_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In inclusive_OR_expr()");
+        eprintln!("In inclusive_OR_expr()");
         let mut lhs: Box<Expr>;
 
         match self.exclusive_OR_expr() {
@@ -958,7 +958,7 @@ impl Parser {
 
     #[allow(non_snake_case)]
     fn exclusive_OR_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In exclusive_OR_expr()");
+        eprintln!("In exclusive_OR_expr()");
         let mut lhs: Box<Expr>;
 
         match self.AND_expr() {
@@ -988,7 +988,7 @@ impl Parser {
 
     #[allow(non_snake_case)]
     fn AND_expr(&mut self)  -> Option<Box<Expr>> { 
-        println!("In AND_expr()");
+        eprintln!("In AND_expr()");
         let mut lhs: Box<Expr>;
 
         match self.equality_expr() {
@@ -1017,7 +1017,7 @@ impl Parser {
     }
 
     fn equality_expr(&mut self) -> Option<Box<Expr>> {
-        println!("In equality_expr()"); 
+        eprintln!("In equality_expr()"); 
         let mut lhs: Box<Expr>;
 
         match self.relational_expr() {
@@ -1046,7 +1046,7 @@ impl Parser {
     }
 
     fn relational_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In relational_expr()");
+        eprintln!("In relational_expr()");
         let mut lhs: Box<Expr>;
 
         match self.shift_expr() {
@@ -1075,7 +1075,7 @@ impl Parser {
     }
 
     fn shift_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In shift_expr()");
+        eprintln!("In shift_expr()");
         let mut lhs: Box<Expr>;
 
         match self.additive_expr() {
@@ -1104,7 +1104,7 @@ impl Parser {
     }
 
     fn additive_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In additive_expr()");
+        eprintln!("In additive_expr()");
         let mut lhs: Box<Expr>;
 
         match self.multiplicative_expr() {
@@ -1133,7 +1133,7 @@ impl Parser {
     }
 
     fn multiplicative_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In multiplicative_expr()");
+        eprintln!("In multiplicative_expr()");
         let mut lhs: Box<Expr>;
 
         match self.unary_expr() {
@@ -1162,7 +1162,7 @@ impl Parser {
     }
 
     fn unary_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In unary_expr()");
+        eprintln!("In unary_expr()");
         if self.match_multi(TokenType::get_unary_ops()) {
             let operator: Token;
             let operand: Box<Expr>;
@@ -1184,7 +1184,7 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Option<Box<Expr>> { 
-        println!("In primary()");
+        eprintln!("In primary()");
         let mut atom: Box<Expr>;
         match self.atom() {
             Some(expr) => atom = expr,
@@ -1192,9 +1192,9 @@ impl Parser {
         }
 
         loop {
-            println!("In primary loop");
+            eprintln!("In primary loop");
             if self.match_(TokenType::DOT) {
-                println!("In primary loop: attributeref");
+                eprintln!("In primary loop: attributeref");
                 // attributeref
                 match self.consume(TokenType::IDENTIFIER, 
                     "Expected an identifier after '.'".to_string()) {
@@ -1210,7 +1210,7 @@ impl Parser {
                 }
 
             } else if self.match_(TokenType::BRACKET_OPEN) {
-                println!("In primary loop: call");
+                eprintln!("In primary loop: call");
                 let arguments = self.expression_list();
                 self.consume(TokenType::BRACKET_CLOSE, "Expected ')' after expressions list".to_string());
                 atom = Box::new(Expr::Call{callee: atom, arguments, datatype: Datatype::yet_to_infer});
@@ -1223,7 +1223,7 @@ impl Parser {
                 //     return Some(atom);
                 // }
             } else if self.match_(TokenType::K_AS) {
-                println!("In primary loop: casting");
+                eprintln!("In primary loop: casting");
                 match self.consume_multi(TokenType::get_datatypes(), 
                 "Expected a datatype after 'as' keyword for type casting".to_string()) {
                     Some(tok) => 
@@ -1247,9 +1247,9 @@ impl Parser {
     }
     
     fn atom(&mut self) -> Option<Box<Expr>> { 
-        println!("In atom()");
+        eprintln!("In atom()");
         if let Some(peek) = self.peek() {
-            println!("Peek: {:?}", peek);
+            eprintln!("Peek: {:?}", peek);
             if peek.tok_type == TokenType::BRACKET_OPEN                          { return self.grouping(); }
             else if TokenType::get_literal_types().contains(&peek.tok_type)      { return self.literal(); }
             else if peek.tok_type == TokenType::IDENTIFIER {
@@ -1268,12 +1268,12 @@ impl Parser {
                 return self.variable();
             } 
         }  
-        println!("Returning none from atom");  
+        eprintln!("Returning none from atom");  
         return None;
     }
 
     fn grouping(&mut self) -> Option<Box<Expr>> { 
-        println!("In grouping()");
+        eprintln!("In grouping()");
         let mut group: Option<Box<Expr>> = None;
         match self.consume(TokenType::BRACKET_OPEN, 
             "Expected '(' at the starting of paranthesized expression".to_string()) {
@@ -1291,7 +1291,7 @@ impl Parser {
     }
 
     fn variable(&mut self) -> Option<Box<Expr>> { 
-        println!("In variable()");
+        eprintln!("In variable()");
         match self.advance() {
             Some(tok) if tok.tok_type == TokenType::IDENTIFIER 
                 => Some(Box::new(Expr::Variable{name: tok, datatype: Datatype::yet_to_infer, struct_name: None})),
@@ -1300,7 +1300,7 @@ impl Parser {
     }
 
     fn literal(&mut self) -> Option<Box<Expr>> { 
-        println!("In literal()");
+        eprintln!("In literal()");
         match self.advance() {
             Some(tok) if TokenType::get_literal_types().contains(&tok.tok_type)
                 => Some(Box::new(Expr::Literal{value: tok, datatype: Datatype::yet_to_infer})),
@@ -1309,7 +1309,7 @@ impl Parser {
     }
 
     fn struct_expr(&mut self) -> Option<Box<Expr>> { 
-        println!("In struct_expr()");
+        eprintln!("In struct_expr()");
         let name: Token;
         match self.consume(TokenType::IDENTIFIER, 
             "Expected identifier in struct expression".to_string()) {
@@ -1390,7 +1390,7 @@ impl Parser {
         
         let mut declarations: Vec<Box<Decl>> = vec![];
         while !self.is_end() {
-            println!("Calling declaration");
+            eprintln!("Calling declaration");
             match self.declaration() {
                 Some(decl) => declarations.push(decl),
                 _ => ()

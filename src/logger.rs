@@ -11,8 +11,8 @@ pub enum LogLevel {
 #[allow(non_snake_case)]
 pub fn log_message(level: LogLevel, col: usize, line: usize, s: String) {
     match level {
-        LogLevel::ERROR   => { eprintln!("[ERROR] [Line: {}, Col: {} ] {}", line, col, s); }
-        LogLevel::WARNING => { eprintln!("[WARN]  [Line: {}, Col: {} ] {}", line, col, s); }
-        LogLevel::CRASH   => { eprintln!("[CRASH] [Line: {}, Col: {} ] {}", line, col, s); process::exit(1); }
+        LogLevel::ERROR   => { println!("[ERROR] [Line: {}, Col: {} ] {}", line, col, s); }
+        LogLevel::WARNING => { println!("[WARN]  [Line: {}, Col: {} ] {}", line, col, s); }
+        LogLevel::CRASH   => { println!("[CRASH] [Line: {}, Col: {} ] {}", line, col, s); process::exit(1); }
     }
 }

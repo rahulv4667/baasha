@@ -12,6 +12,7 @@ use crate::logger::*;
 
 pub struct TypeChecker {
     pub symbol_table: SymbolTable,
+    pub current_scope: Scope,
     pub has_errors: bool
 }
 
@@ -40,20 +41,38 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                     for param in parameters {
                         self.symbol_table.variable_table.insert(param.0.value.clone(), Datatype::get_tok_datatype(&param.1));
                     }
+                    if let Scope::Impl{name, ..} = &self.current_scope {
+                        self.symbol_table.variable_table.insert(
+                            "self".to_string(), 
+                            Datatype::object{name: name.clone()}
+                        );
+                    }
                 },
             /////////////////////////////////////////////////////////////
             // Decl::ImplDecl{name, trait_name, funcs}
-            Decl::ImplDecl{name, funcs, ..}
+            Decl::ImplDecl{name, funcs, trait_name}
                 => {
+                    let scope = self.current_scope.clone();
+                    self.current_scope = Scope::Impl{
+                        name: name.value.clone(), 
+                        trait_name: if trait_name.is_none() { 
+                            "".to_string()
+                        } else { 
+                            trait_name.as_ref().unwrap().value.clone()
+                        }
+                    };
                     for func in funcs {
                         self.visit_decl(func);
                         (*self.symbol_table.impl_decls.entry(
                             name.value.clone()
                         ).or_insert(vec![])).push((*func).clone());
                     }
+                    self.current_scope = scope;
                 },
             Decl::TraitDecl{name, funcs}
                 => {
+                    let scope = self.current_scope.clone();
+                    self.current_scope = Scope::Trait{name: name.value.clone()};
                     // (*self.symbol_table.trait_decls.entry(name.value.clone()).or_insert(vec![])).append(funcs);
                     for func in funcs {
                         self.visit_decl(func); 
@@ -61,6 +80,7 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                             name.value.clone()
                         ).or_insert(vec![])).push((*func).clone());
                     }
+                    self.current_scope = scope;
                 },
             // _ => ()
         }
@@ -128,7 +148,7 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
                         dtype = Datatype::get_tok_datatype(dttype);
                     }
 
-                    // println!("Variable declared: ")
+                    // eprintln!("Variable declared: ")
                     self.symbol_table.variable_table.insert(name.value.clone(), dtype);
                     // self.symbol_table.variable_table[&name.value] = dtype;
                 },
@@ -172,6 +192,145 @@ impl MutableVisitor<(), (), Datatype> for TypeChecker {
 
 #[allow(dead_code, unused)]
 impl TypeChecker {
+
+    fn get_runtime_function_type(&self, func_name: String) -> Datatype {
+        match func_name.as_str() {
+            "scani8" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::int8),
+                param_types: vec![]
+            },
+            "scani16" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::int16),
+                param_types: vec![]
+            },
+            "scani32" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::int32),
+                param_types: vec![]
+            },
+            "scani64" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::int64),
+                param_types: vec![]
+            },
+            "scanu8" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::uint8),
+                param_types: vec![]
+            },
+            "scanu16" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::uint16),
+                param_types: vec![]
+            },
+            "scanu32" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::uint32),
+                param_types: vec![]
+            },
+            "scanu64" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::uint64),
+                param_types: vec![]
+            },
+            "scanf32" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::float32),
+                param_types: vec![]
+            },
+            "scanf64" => Datatype::function{
+                name: func_name, 
+                obj_name: None, 
+                returntype: Box::new(Datatype::float64),
+                param_types: vec![]
+            },
+            "printi8" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::int8)]
+            },
+            "printi16" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::int16)]
+            },
+            "printi32" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::int32)]
+            },
+            "printi64" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::int64)]
+            },
+            "printu8" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::uint8)]
+            },
+            "printu16" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::uint16)]
+            },
+            "printu32" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::uint32)]
+            },
+            "printu64" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::uint64)]
+            },
+            "printf32" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::float32)]
+            },
+            "printf64" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::float64)]
+            },
+            "scanbool" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::bool),
+                param_types: vec![]
+            },
+            "printbool" => Datatype::function {
+                name: func_name,
+                obj_name: None,
+                returntype: Box::new(Datatype::yet_to_infer),
+                param_types: vec![Box::new(Datatype::bool)]
+            },
+            _ => Datatype::yet_to_infer
+        }
+    }
+
     fn visit_cast_expr(&mut self, 
         variable: &mut Box<Expr>, 
         casttype: &mut Token, 
@@ -311,7 +470,9 @@ impl TypeChecker {
     fn visit_binary_expr(&mut self, lhs:&mut Box<Expr>, rhs: &mut Box<Expr>, operator: &mut Token, datatype: &mut Datatype) -> Datatype {
         let lhs_datatype: Datatype = self.visit_expr(lhs);
         let rhs_datatype: Datatype = self.visit_expr(rhs);
-        println!("Binary expr :::: Lhs type: {:?}, Rhs type: {:?}", lhs_datatype, rhs_datatype);
+        
+
+        eprintln!("Binary expr :::: Lhs type: {:?}, Rhs type: {:?}", lhs_datatype, rhs_datatype);
         if lhs_datatype == Datatype::yet_to_infer || rhs_datatype == Datatype::yet_to_infer {
             return Datatype::yet_to_infer;
         }
@@ -466,7 +627,7 @@ impl TypeChecker {
     fn visit_literal_expr(&mut self, value: &mut Token, datatype: &mut Datatype) -> Datatype {
         // unimplemented!()
         *datatype = Datatype::get_datatype(&value.tok_type);
-        println!("Literal expr type: {:?}", *datatype);
+        eprintln!("Literal expr type: {:?}", *datatype);
         return (*datatype).clone();
     }
 
@@ -581,7 +742,7 @@ impl TypeChecker {
         match self.symbol_table.variable_table.get(&name.value) {
             Some(dtype) => {
                 *datatype = (*dtype).clone();
-                println!("Variable datatype: {:?}", *datatype);
+                eprintln!("Variable datatype: {:?}", *datatype);
                 return (*datatype).clone();
             },
             _ => {
@@ -641,13 +802,16 @@ impl TypeChecker {
 
             
         }
-        return Datatype::yet_to_infer;
+
+        *datatype = self.get_runtime_function_type(name.value.clone());
+        return (*datatype).clone();
+        // return Datatype::yet_to_infer;
     }
 
     fn visit_exprlist_expr(&mut self, expr_list: &mut Vec<Box<Expr>>, datatype: &mut Datatype) -> Datatype {
         for expr in expr_list {
             *datatype = self.visit_expr(expr);
-            println!("Exprlist type: {:?}", *datatype);
+            eprintln!("Exprlist type: {:?}", *datatype);
         }
         return (*datatype).clone();
     }

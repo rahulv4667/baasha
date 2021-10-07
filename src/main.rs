@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 use std::process;
 mod globals;
 mod logger;
@@ -18,6 +19,7 @@ use inkwell::passes::PassManager;
 use inkwell::targets::TargetMachine;
 use inkwell::values::FunctionValue;
 use lexer::Lexer;
+use logger::log_message;
 // use ast::{Stmt, Expr};
 use parser::Parser;
 use visitor::Printer;
@@ -38,7 +40,8 @@ struct Driver {
     emit_parse_tree: bool,
     emit_typed_tree: bool,
     emit_llvm_ir: bool,
-    target: String 
+    target: String,
+    output_filename: String 
 }
 
 impl Driver {
@@ -47,9 +50,9 @@ impl Driver {
         let (tokens, has_errors) = lexer.tokenize(filecontent);
         
         if self.emit_tokens {
-            println!("===================================Lexer=================================");
+            eprintln!("===================================Lexer=================================");
             lexer.print_tokens();
-            println!("=========================================================================");
+            eprintln!("=========================================================================");
         }
 
         if has_errors {
@@ -63,13 +66,13 @@ impl Driver {
         let mut parser: Parser = Parser::new();
         let (declarations, has_errors) = parser.parse(tokens.clone());
         if self.emit_parse_tree {
-            println!("===================================Parse Tree=================================");
+            eprintln!("===================================Parse Tree=================================");
             let mut printer: Printer = Printer{space_width: 0};
             for decl in &declarations {
                 printer.visit_decl(decl);
-                // println!("Decl: {:?}", *decl);
+                // eprintln!("Decl: {:?}", *decl);
             }
-            println!("=========================================================================");
+            eprintln!("=========================================================================");
             
         }
 
@@ -88,6 +91,7 @@ impl Driver {
                 trait_decls: HashMap::new(),
                 func_table: HashMap::new()
             },
+            current_scope: globals::Scope::Global,
             has_errors: false 
         };
         let mut decls = declarations.clone();
@@ -95,13 +99,13 @@ impl Driver {
             type_checker.visit_decl(decl);
         }
         if self.emit_typed_tree {
-            println!("===================================Typed Tree=================================");
+            eprintln!("===================================Typed Tree=================================");
             let mut printer: Printer = Printer{space_width: 0};
             for decl in &decls {
                 printer.visit_decl(decl);
-                // println!("Decl: {:?}", *decl);
+                // eprintln!("Decl: {:?}", *decl);
             }
-            println!("=========================================================================");
+            eprintln!("=========================================================================");
             
         }
 
@@ -146,21 +150,23 @@ impl Driver {
             is_parsing_lvalue: false
         };
 
+        codegenerator.add_runtime_declarations();
+
         for decl in &decls {
             codegenerator.visit_decl(decl);
         }
 
         if self.emit_llvm_ir {
             let llvmir = codegenerator.module.print_to_string().to_string();
-            println!("=======================LLVM IR=======================");
-            println!("{}", llvmir);
-            println!("=====================================================");
+            eprintln!("=======================LLVM IR=======================");
+            eprintln!("{}", llvmir);
+            eprintln!("=====================================================");
         }
         
         // for (func_name, _) in codegenerator.symbol_table.func_table {
         //     fpm.run_on(&codegenerator.module.get_function(func_name.as_str()).unwrap());
         // }
-        println!("{:#?}", codegenerator.module.verify());
+        eprintln!("{:#?}", codegenerator.module.verify());
         let target_machine = self.compile_to_obj();
         let path = std::path::Path::new("main.o");
         assert!(target_machine.write_to_file(
@@ -176,22 +182,35 @@ impl Driver {
     }
 
     fn compile_to_obj(&self) -> TargetMachine {
-        inkwell::targets::Target::initialize_x86(&inkwell::targets::InitializationConfig::default());
+        inkwell::targets::Target::initialize_all(&inkwell::targets::InitializationConfig::default());
 
         let opt = inkwell::OptimizationLevel::Default;
         let reloc= inkwell::targets::RelocMode::Default;
         let model = inkwell::targets::CodeModel::Default;
         
-    
-        let target= inkwell::targets::Target::from_name("x86-64").unwrap();
+        let target_triple = inkwell::targets::TargetMachine::get_default_triple();
+        let target = inkwell::targets::Target::from_triple(&target_triple).unwrap();
+        // let target= inkwell::targets::Target::from_name("x86-64").unwrap();
+        // let target_machine = target.create_target_machine(
+        //     &inkwell::targets::TargetTriple::create("x86_64-pc-linux-gnu"), 
+        //     "x86-64", 
+        //     "+avx2", 
+        //     opt, 
+        //     reloc, 
+        //     model
+        // ).unwrap();
+
+        
         let target_machine = target.create_target_machine(
-            &inkwell::targets::TargetTriple::create("x86_64-pc-linux-gnu"), 
-            "x86-64", 
-            "+avx2", 
+            &inkwell::targets::TargetMachine::get_default_triple(), 
+            inkwell::targets::TargetMachine::get_host_cpu_name().to_str().unwrap(), 
+            inkwell::targets::TargetMachine::get_host_cpu_features().to_str().unwrap(), 
             opt, 
             reloc, 
             model
         ).unwrap();
+        
+        
 
         return target_machine;
     }
@@ -199,7 +218,7 @@ impl Driver {
 
     fn compile_to_llvm(&self) {
         let  filecontent = fs::read_to_string(self.file_name.clone()).unwrap_or_else(|err| {
-            println!("Problem occured while reading the file: {}", err);
+            eprintln!("Problem occured while reading the file: {}", err);
             process::exit(1);
         });
 
@@ -214,7 +233,51 @@ impl Driver {
 
 
         // LLVM IR
-        let _ = self.generate_llvm(declarations);        
+        let _ = self.generate_llvm(declarations);  
+        
+
+        eprintln!("Currnet Directory: {:?}", std::env::current_dir());
+        if std::process::Command::new("clang").output().is_err() {
+            // try gcc
+            if std::process::Command::new("gcc").output().is_ok() {
+                // use gcc
+                let output = std::process::Command::new("gcc")
+                    .arg("runtime.c")
+                    .arg("main.o")
+                    .arg("-o")
+                    .arg(self.output_filename.as_str())
+                    // .current_dir("")
+                    .output()
+                    .expect("Error occured while trying to create an executable");
+
+                eprintln!("Status: {}", output.status);
+                std::io::stdout().write_all(&output.stdout).unwrap();
+                std::io::stderr().write_all(&output.stderr).unwrap();
+
+            } else {
+                log_message(logger::LogLevel::ERROR, 0, 0, 
+                    "No suitable C/C++ compiler to make an executable".to_string()
+                );
+            }
+        } else {
+            // use clang
+                
+            let output = std::process::Command::new("clang")
+                .arg("runtime.c")
+                .arg("main.o")
+                .arg("-o")
+                .arg(self.output_filename.as_str())
+                // .current_dir("")
+                .output()
+                .expect("Error occured while trying to create an executable");
+
+            eprintln!("Status: {}", output.status);
+            std::io::stdout().write_all(&output.stdout).unwrap();
+            std::io::stderr().write_all(&output.stderr).unwrap();
+            
+
+        }
+            
     }
 
 }
@@ -256,6 +319,11 @@ fn main()  {
                         .long("target")
                         .help("The target triple of which object files need to be generated")
                         .takes_value(true))
+                    .arg(Arg::with_name("output")
+                        .short("o")
+                        .long("output")
+                        .help("The filename of executable file name")
+                        .takes_value(true))
                     .get_matches();
         
         // matches.value_of(name)
@@ -268,7 +336,8 @@ fn main()  {
         emit_llvm_ir: matches.value_of("llvmir").unwrap_or("false").contains("true"),
         target: matches.value_of("target")
             .unwrap_or(inkwell::targets::TargetMachine::get_default_triple().as_str().to_str().unwrap())
-            .to_string()
+            .to_string(),
+        output_filename: matches.value_of("output").unwrap_or("a.out").to_string()
     };
 
     driver.compile_to_llvm();

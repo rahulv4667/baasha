@@ -1,0 +1,40 @@
+struct Point {
+    x: float32,
+    y: float64
+}
+
+impl Point {
+    func print() -> int64 {
+        printf32(self.x);
+        println();
+        printf64(self.y);
+        println();
+        return 0;
+    }
+}
+
+func main() -> int64 {
+    var x: int32;
+    var p: Point;
+
+    x = scani32();
+    printi32(x);
+    println();
+
+    p = Point {
+        x: 20.2 as float32,
+        y: 20.5 as float64,
+    };
+
+    p.print();
+
+    p.x = scanf32();
+    p.y = scanf64();
+    
+    p.print();
+
+    printf32(p.x + p.y as float32);
+    println();
+    
+    return 0;
+}

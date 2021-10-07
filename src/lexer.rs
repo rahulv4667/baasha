@@ -453,7 +453,7 @@ impl Lexer {
 
     pub fn print_tokens(&self) {
         for token in &self.tokens {
-            println!("{:?}", token);
+            eprintln!("{:?}", token);
         }
     }
 }

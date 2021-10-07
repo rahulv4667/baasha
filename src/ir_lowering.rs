@@ -6,18 +6,21 @@
 
 use std::collections::HashMap;
 
-use inkwell::data_layout::DataLayout;
+use inkwell::module::Linkage;
+// use inkwell::data_layout::DataLayout;
 // use inkwell::basic_block::BasicBlock;
 // use inkwell::builder;
 use inkwell::types::{BasicTypeEnum, StringRadix};
+use crate::logger;
 // use generational_arena::Arena;
 // use inkwell::types::AnyTypeEnum;
 // use inkwell::types::IntType;
 // use inkwell::types::AnyTypeEnum;
-use inkwell::values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, FunctionValue, InstructionValue, IntValue};
+use inkwell::values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, FunctionValue, IntValue};
 
 use crate::globals::{self, Scope, TokenType};
 use crate::lexer::Token;
+use crate::logger::log_message;
 // use crate::logger::log_message;
 use crate::symbol_table::IRSymbolTable;
 use crate::visitor::{VisitorWithLifeTime};
@@ -132,6 +135,141 @@ impl<'a, 'ctx>
 #[allow(unused)]
 impl<'a, 'ctx> Codegen<'a, 'ctx> {
 
+    fn add_runtime_print_int_declaration(&self, bit_width: u32) {
+        let printi = self.context.void_type().fn_type(&[
+            BasicTypeEnum::IntType(self.context.custom_width_int_type(bit_width))
+        ], false);
+        self.module.add_function(
+            ("printi".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            printi, 
+            Some(Linkage::External)
+        );
+    }
+
+    fn add_runtime_scan_int_declaration(&self, bit_width: u32) {
+        let scani = self.context
+            .custom_width_int_type(bit_width)
+            .fn_type(&[], false);
+        
+        self.module.add_function(
+            ("scani".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            scani, 
+            Some(Linkage::External)
+        );
+    }
+
+    fn add_runtime_print_uint_declaration(&self, bit_width: u32) {
+        let printu = self.context.void_type().fn_type(&[
+            BasicTypeEnum::IntType(self.context.custom_width_int_type(bit_width))
+        ], false);
+        self.module.add_function(
+            ("printu".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            printu, 
+            Some(Linkage::External)
+        );
+    }
+
+
+    fn add_runtime_scan_uint_declaration(&self, bit_width: u32) {
+        let scanu = self.context
+            .custom_width_int_type(bit_width)
+            .fn_type(&[], false);
+        
+        self.module.add_function(
+            ("scanu".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            scanu, 
+            Some(Linkage::External)
+        );
+    }
+
+    fn add_runtime_print_float_declaration(&self, bit_width: u32) {
+        let printf = self.context.void_type().fn_type(&[
+            if bit_width == 32 {
+                BasicTypeEnum::FloatType(self.context.f32_type())
+            } else {
+                BasicTypeEnum::FloatType(self.context.f64_type())
+            }
+        ], false);
+        self.module.add_function(
+            ("printf".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            printf, 
+            Some(Linkage::External)
+        );
+    }
+
+    fn add_runtime_scan_float_declaration(&self, bit_width: u32) {
+        let scanf = if bit_width == 32 {
+            self.context.f32_type().fn_type(&[], false)
+        } else {
+            self.context.f64_type().fn_type(&[], false)
+        };
+        
+        self.module.add_function(
+            ("scanf".to_string() + bit_width.to_string().as_str() ).as_str(), 
+            scanf, 
+            Some(Linkage::External)
+        );
+    }
+
+
+    fn add_runtime_print_bool_declaration(&self) {
+        let printbool = self.context.void_type().fn_type(&[
+            BasicTypeEnum::IntType(self.context.bool_type())
+        ], false);
+        self.module.add_function(
+            "printbool", 
+            printbool, 
+            Some(Linkage::External)
+        );
+    }
+
+    fn add_runtime_scan_bool_declaration(&self) {
+        let scanbool = self.context.bool_type().fn_type(&[], false);
+        
+        let func = self.module.add_function(
+            "scanbool", 
+            scanbool, 
+            Some(Linkage::External)
+        );
+        // self.symbol_table.func_table.insert("scanbool".to_string(), func);
+    }
+
+    pub fn add_runtime_declarations(&self) {
+        // void printi8(int8_t);
+        self.add_runtime_print_int_declaration(8);
+        self.add_runtime_print_int_declaration(16);
+        self.add_runtime_print_int_declaration(32);
+        self.add_runtime_print_int_declaration(64);
+
+        self.add_runtime_print_uint_declaration(8);
+        self.add_runtime_print_uint_declaration(16);
+        self.add_runtime_print_uint_declaration(32);
+        self.add_runtime_print_uint_declaration(64);
+
+        self.add_runtime_print_float_declaration(32);
+        self.add_runtime_print_float_declaration(64);
+
+        self.add_runtime_print_bool_declaration();
+
+        self.add_runtime_scan_int_declaration(8);
+        self.add_runtime_scan_int_declaration(16);
+        self.add_runtime_scan_int_declaration(32);
+        self.add_runtime_scan_int_declaration(64);
+
+        self.add_runtime_scan_uint_declaration(8);
+        self.add_runtime_scan_uint_declaration(16);
+        self.add_runtime_scan_uint_declaration(32);
+        self.add_runtime_scan_uint_declaration(64);
+
+        self.add_runtime_scan_float_declaration(32);
+        self.add_runtime_scan_float_declaration(64);
+
+        self.add_runtime_scan_bool_declaration();
+
+        // void println();
+        let func = self.context.void_type().fn_type(&[], false);
+        self.module.add_function("println", func, Some(Linkage::External));
+    }
 
     fn get_type(&mut self, token: &Token) -> inkwell::types::BasicTypeEnum<'ctx> {
         match token {
@@ -717,7 +855,7 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         let mut args = vec![];
 
         if object_name.is_some() {
-            let obj_name = object_name.unwrap();
+            let obj_name = object_name.as_ref().unwrap();
             // pass object as reference in function call.
             println!("Symbol Table: {:#?}", self.symbol_table);
             args.push(object.unwrap());
@@ -730,11 +868,22 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         
         let call_val =  self.builder.build_call(
             function, 
-            &args, 
-            (name+"..call").as_str()
+            &args,
+            name.as_str() 
+            // if object_name.is_some() {
+            //     (name+"..call").as_str()
+            // } else {
+            //     name.as_str()
+            // }
         ).try_as_basic_value(); 
         
-        return call_val.left().unwrap();
+        println!("Codegen-Call_function: CallVal: {:?}", call_val);
+        if call_val.is_left() {
+            return call_val.left().unwrap();
+        } else {
+            return BasicValueEnum::IntValue(self.context.bool_type().const_zero());
+        }
+        // return call_val.left().unwrap();
     }
 
 
@@ -790,6 +939,11 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
         // unimplemented!();
     }
+
+    // fn anytype_to_basictype<T>(&self, anytype: AnyTypeEnum<'ctx>) -> T
+    // where T=BasicType<'ctx> {
+
+    // }
 
 
     fn visit_struct_decl(&mut self, name: &Token, fields: &Vec<(Token, Token)>)
@@ -933,19 +1087,25 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
                 BasicTypeEnum::ArrayType(a) => builder_new.build_alloca(a, arg_name.as_str()),
                 BasicTypeEnum::FloatType(f) => builder_new.build_alloca(f, arg_name.as_str()),
                 BasicTypeEnum::IntType(i)   => builder_new.build_alloca(i, arg_name.as_str()),
-                BasicTypeEnum::PointerType(p)   => builder_new.build_alloca(p, arg_name.as_str()),
+                BasicTypeEnum::PointerType(p)   => arg.into_pointer_value(),
+                    // => builder_new.build_alloca(p, arg_name.as_str()),
                 BasicTypeEnum::StructType(s)    => builder_new.build_alloca(s, arg_name.as_str()),
                 BasicTypeEnum::VectorType(v)    => builder_new.build_alloca(v, arg_name.as_str())
             };
             // let alloca = self.create_entry_block_alloca(arg_name);
 
-            self.builder.build_store(alloca, arg);
-            // self.symbol_table.variable_table.insert(arg_name.clone(), BasicValueEnum::PointerValue(alloca));
-            
+            println!("Codegen-FuncDef: Arg_name: {:#?}, \nArg_Type: {:#?},\nAlloca: {:#?},\nArg: {:#?}",
+                arg_name, arg_type, alloca, arg);
+
+            if let BasicTypeEnum::PointerType(_) = arg_type {
+                
+            } else {
+                self.builder.build_store(alloca, arg);
+            }
             self.symbol_table.variable_table.insert(arg_name.clone(), alloca);
         }
 
-
+        println!("Codegen-FuncDef: VariableTable: {:#?}", self.symbol_table.variable_table);
         let body = self.visit_stmt(block)?;
         
         match body {
@@ -1507,7 +1667,9 @@ impl<'a, 'ctx> Codegen<'a, 'ctx> {
         }
 
         // print some error.
-        
+        log_message(logger::LogLevel::ERROR, name.col, name.line, 
+            "Given object doesn't have specified attribute".to_string());
+        return BasicValueEnum::IntValue(self.context.bool_type().const_zero());
         unimplemented!();
     }
 

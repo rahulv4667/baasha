@@ -1,105 +1,99 @@
 ## Baasha
 
-A modern programming language inspired by Rust and Golang. 
+Yet another programming language inspired from Rust, Golang and C++.
 
-**Features in first iteration:**
-- Rust-like structs, impl and traits.
-- goroutine-like green threads
-- Every other basic language features which make it turing complete.
+The name is inpisred from *Rajinikanth* cult film `Baasha` because it is a semi-homophonic variant of the hindi word `Bhasha` which means language.
 
-Features in future iteration:
-- Templates
-- Rust-like enums and Pattern matching
-- Closures
+Supported features:
 
+- Types: `int8`, `int16`, `int32`, `int64`, `uint8`, `uint16`, `uint32`, `uint64`, `float32`, `float64`, `bool`
+- Aggregate or object oriented features similar to `Rust`: `struct`, `impl` & `trait`
+- Number literals are `int64` by default.
 
-**Syntax Grammar:**
+Future support:
+- Arrays, strings, characters
+- Green threads (similar to goroutines in golang)
 
+## How to use
+
+- Download the relevant zip folder for your system from [Releases](https://github.com/rahulv4667/baasha/releases/tag/0.0.1)
+- Add the `baasha` executable to your system `PATH`
+- create a `.bs` file and write your program in it.
+- Run `baasha -f <filename>`
+
+**Other commmand line options**
 ```
-program         -> declaration* EOF
+baasha [OPTIONS] 
 
-declaration     -> funcDef | structDecl | implDecl | traitDecl
-prototype       -> "func" IDENTIFIER "(" parameters? ")" returntypes?
-funcDef         -> prototype block 
-funcDecl        -> prototype ";"
-structDecl      -> "struct" IDENTIFIER "{" ( IDENTIFIER ("," IDENTIFIER)* ":" DATATYPE  )* "}"
-implDecl        -> "impl" IDENTIFIER ("for" IDENTIFIER)? "{" funcDef* "}"
-traitDecl       -> "trait" IDENTIFIER "{" (funcDecl | funcDef)* "}"
-
-
-block           -> "{" statement* "}"
-statement       -> varStmt | ifStmt | returnStmt | forStmt | loopStmt | declStmt | exprStmt
-varStmt         -> "var" IDENTIFIER ((":" types) | ("=" expression) | (":" types) ("=" expression)) ";"
-ifStmt          -> "if" expression block ("else" block|ifStmt)?
-returnStmt      -> "return" expr_list ";"
-loopStmt        -> "loop" expression block
-forStmt         -> "for"    assignment ";" expression ";" expr_list block
-whileStmt       -> "while" expression block
-
-exprStmt        -> (expression)? ";"
-expression      -> assignment-expr | expression "," assignment-expr         -> assignment-expr ("," assignment-expr)*
-
-
-assignment-expr -> /*conditional-expr*/ logORexpr | unaryExpr assignment-op assignment-expr
-                        -> logORexpr (assignment-op assignment-expr)*
-assignment-op   -> "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
-
-
-target          -> identifier | attributeref | /* subscription | slicing */
-
-
-logORexpr        -> logANDexpr | logORexpr "or" logANDexpr          -> logANDexpr ("or" logANDexpr)*
-logANDexpr       -> inclORexpr | logANDexpr "and" inclORexpr        -> inclORexpr ("and" inclORexpr)*
-inclORexpr       -> exclORexpr | inclORexpr "|" exclORexpr          -> exclORexpr ("|" exclORexpr)*
-exclORexpr       -> ANDexpr | exclORexpr "^" ANDexpr                -> ANDexpr    ("^" ANDexpr)*
-ANDexpr          -> equality-expr | ANDexpr "&" equality-expr       -> equality-expr ("&" equality-expr)*
-equality-expr    -> relational-expr | equality-expr ("==" | "!=") relational-expr   -> relational-expr (("=="|"!=") relational-expr)*
-relational-expr  -> shift-expr | relational-expr relational-op shift-expr     -> shift-expr (relational-op shift-expr)*
-shift-expr       -> additive-expr | shift-expr ("<<"|">>") additive-expr      -> additive-expr (("<<"|">>") additive-expr)*
-additive-expr    -> mul-expr | additive-expr ("+"|"-") mul-expr               -> mul-expr (("+"|"-") mul-expr)*
-mul-expr         -> unary | mul-expr ("*"|"/"|"%") unary                      -> unary (("*"|"/"|"%") unary)*
-unary            -> unary-op unary | primary                                  -> unary-op* primary
-
-unary-op         -> "~" | "!" | "-" | "+"
-relational-op    -> "<"|">"|"<="|">="
-
-primary     -> atom | attributeref | /* subscription | slicing */ | call | cast
-atom        -> identifier | literal | grouping | structExpr
-grouping    -> "(" expression ")"
-structExpr  -> identifier "{" (identifier ":" expression)* ""
-attributeref-> primary "." identifier
-call        -> primary "(" expr_list ")" 
-cast        -> primary "as" DATATYPE
-
-
-
-DATATYPE    -> "int8"|"int16"|"int32"|"int64"|"uint8"|"uint16"|"uint32"|"uint64"|"float32"|"float64"|"bool"|IDENTIFIER
-type_list   -> DATATYPE ("," DATATYPE)*
-```
-
-[comment]: <> ( target_list     -> target|"_" ("," target|"_")* )
-
-
-[comment]: <> (target_list     -> target|"_" ("," target|"_")*)
-[comment]: <> (conditional_expr -> logORexpr ("if" logORexpr "else" block)*)
-[comment]: <> (expr_list       -> expression ("," expression)*)
-[comment]: <> (assignment      -> target_list assignment-op expr_list)
- 
-**Lexical Grammar:**
-```
-INTEGER     -> HEX_LIT | OCTAL_LIT | DIGIT+
-DIGIT       -> "0"..."9"
-ALPHA       -> "a"..."z"|"A"..."Z"
-HEX_ALPHA   -> "a"..."f"|"A..."F"
-
-HEX_LIT     -> "0" ("x"|"X") (DIGIT|HEX_ALPHA)+
-OCTAL_LIT   -> "0" ("o"|"O") ("0"..."7")+
-
-FLOAT       -> DIGIT+ ( "."| (("e"|"E") ("+"|"-")) ) DIGIT+
-
-IDENTIFIER  -> ("_" | ALPHA) ALPHA+
+    --filename, -f          Takes the input .bs file
+    --emit-tokens, -t       Emits a list of lexical tokens
+    --emit-parse-tree, -p   Emits AST after initial parsing
+    --emit-typed-tree, -d   Emits AST after type checking
+    --emit-llvm, -l         Emits LLVM IR of the given code
+    --output, -o            The filename of executable file name
 ```
 
 
-**Operator Precedene and Associativity**
+## Project setup
 
+- Install `Python3`, `Rust`, `LLVM 12`
+- Run `git clone https://github.com/rahulv4667/baasha`
+
+
+### Example
+
+```
+struct Point {
+    x: float32,
+    y: float64
+}
+
+impl Point {
+    func print() -> int64 {
+        printf32(self.x);
+        println();
+        printf64(self.y);
+        println();
+        return 0;
+    }
+}
+
+func main() -> int64 {
+    var x: int32;
+    var p: Point;
+
+    x = scani32();
+    printi32(x);
+    println();
+
+    p = Point {
+        x: 20.2 as float32,
+        y: 20.5 as float64,
+    };
+
+    p.print();
+
+    p.x = scanf32();
+    p.y = scanf64();
+    
+    p.print();
+
+    printf32(p.x + p.y as float32);
+    println();
+    
+    return 0;
+}
+```
+
+**Output**
+```
+inp> 10
+out> 10
+out> 20.200001
+out> 20.500000
+inp> 20.5
+inp> 20.5
+out> 20.500000
+out> 20.500004
+out> 41.000004
+```

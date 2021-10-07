@@ -56,6 +56,9 @@ func main() -> int64  {
     var y: int32;
     var z: int32;
     y = 10 as int32;
+    printi32(y);
+    y = scani32();
+    printi32(y);
     var x: hello = hello{x: y, y: z};
     //x = hello{x: y, y: z};
     x.x = 10 as int32;

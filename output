@@ -3,333 +3,11 @@ In declaration()
 In struct_declaration()
 Calling declaration
 In declaration()
-In trait_declaration()
-In block()
-In prototype()
-In block()
-In statement()
-In var_stmt()
-In statement()
-In return_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: K_IF, value: "if" }
-Returning none from atom
-In statement()
-In if_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "x" }
-In variable()
-In primary loop
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
-In grouping()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "1" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In primary loop
-In block()
-In statement()
-In expr_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "x" }
-In variable()
-In primary loop
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
-In grouping()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "1" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In primary loop
-In statement()
-In block()
-In statement()
-In expr_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "x" }
-In variable()
-In primary loop
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
-In grouping()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "2" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In primary loop
-In statement()
-Calling declaration
-In declaration()
 In impl_declaration()
 In block()
 In prototype()
 In block()
 In statement()
-In return_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "y" }
-In variable()
-In primary loop
-In statement()
-In block()
-In prototype()
-In block()
-In statement()
-In return_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
-In grouping()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "10" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In primary loop
-In statement()
-Calling declaration
-In declaration()
-In impl_declaration()
-In block()
-In prototype()
-In block()
-In statement()
-In return_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: BRACKET_OPEN, value: "(" }
-In grouping()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "20" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In primary loop
-In statement()
-Calling declaration
-In declaration()
-In block()
-In prototype()
-In block()
-In statement()
-In return_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "10" }
-In literal()
-In primary loop
-In statement()
-Calling declaration
-In declaration()
-In block()
-In prototype()
-In block()
-In statement()
-In var_stmt()
-In statement()
-In var_stmt()
-In statement()
 In expr_stmt()
 In expression()
 In assignment()
@@ -346,144 +24,8 @@ In multiplicative_expr()
 In unary_expr()
 In primary()
 In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "y" }
+Peek: Token{ tok_type: IDENTIFIER, value: "printf32" }
 In variable()
-In primary loop
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "10" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In statement()
-In statement()
-In var_stmt()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "hello" }
-In struct_expr()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "y" }
-In variable()
-In primary loop
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "z" }
-In variable()
-In primary loop
-In primary loop
-In statement()
-In expr_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "x" }
-In variable()
-In primary loop
-In primary loop: attributeref
-In primary loop
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "10" }
-In literal()
-In primary loop
-In primary loop: casting
-In primary loop
-In statement()
-In statement()
-In expr_stmt()
-In expression()
-In assignment()
-In logical_OR_expr()
-In logical_AND_expr()
-In inclusive_OR_expr()
-In exclusive_OR_expr()
-In AND_expr()
-In equality_expr()
-In relational_expr()
-In shift_expr()
-In additive_expr()
-In multiplicative_expr()
-In unary_expr()
-In primary()
-In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "x" }
-In variable()
-In primary loop
-In primary loop: attributeref
 In primary loop
 In primary loop: call
 In expression_list()
@@ -500,8 +42,10 @@ In multiplicative_expr()
 In unary_expr()
 In primary()
 In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "y" }
+Peek: Token{ tok_type: IDENTIFIER, value: "self" }
 In variable()
+In primary loop
+In primary loop: attributeref
 In primary loop
 In primary loop
 In statement()
@@ -522,7 +66,88 @@ In multiplicative_expr()
 In unary_expr()
 In primary()
 In atom()
-Peek: Token{ tok_type: IDENTIFIER, value: "main2" }
+Peek: Token{ tok_type: IDENTIFIER, value: "println" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "printf64" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "self" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "println" }
 In variable()
 In primary loop
 In primary loop: call
@@ -561,360 +186,761 @@ In multiplicative_expr()
 In unary_expr()
 In primary()
 In atom()
-Peek: Token{ tok_type: INT_LITERAL, value: "10" }
+Peek: Token{ tok_type: INT_LITERAL, value: "0" }
 In literal()
 In primary loop
 In statement()
-Variable datatype: int32
-Literal expr type: int64
-Exprlist type: int32
-Binary expr :::: Lhs type: int32, Rhs type: int32
-Exprlist type: bool
-Variable datatype: int32
-Literal expr type: int64
-Exprlist type: int32
-Binary expr :::: Lhs type: int32, Rhs type: int32
-Exprlist type: int32
-Variable datatype: int32
-Literal expr type: int64
-Exprlist type: int32
-Binary expr :::: Lhs type: int32, Rhs type: int32
-Exprlist type: int32
-Variable datatype: int32
-Exprlist type: int32
-Literal expr type: int64
-Exprlist type: int32
-Exprlist type: int32
-Literal expr type: int64
-Exprlist type: int32
-Exprlist type: int32
-Literal expr type: int64
-Exprlist type: int64
-Variable datatype: int32
-Literal expr type: int64
-Exprlist type: int32
-Variable datatype: int32
-Variable datatype: int32
-Variable datatype: object { name: "hello" }
-Literal expr type: int64
-Exprlist type: int32
-Variable datatype: object { name: "hello" }
+Calling declaration
+In declaration()
+In block()
+In prototype()
+In block()
+In statement()
+In var_stmt()
+In statement()
+In var_stmt()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "x" }
+In variable()
+In primary loop
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "scani32" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "printi32" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "x" }
+In variable()
+In primary loop
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "println" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "Point" }
+In struct_expr()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: FLOAT_LITERAL, value: "20.2" }
+In literal()
+In primary loop
+In primary loop: casting
+In primary loop
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: FLOAT_LITERAL, value: "20.5" }
+In literal()
+In primary loop
+In primary loop: casting
+In primary loop
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "scanf32" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "scanf64" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "printf32" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "p" }
+In variable()
+In primary loop
+In primary loop: attributeref
+In primary loop
+In primary loop: casting
+In primary loop
+In primary loop
+In statement()
+In statement()
+In expr_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: IDENTIFIER, value: "println" }
+In variable()
+In primary loop
+In primary loop: call
+In expression_list()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: BRACKET_CLOSE, value: ")" }
+Returning none from atom
+In primary loop
+In statement()
+In statement()
+In return_stmt()
+In expression()
+In assignment()
+In logical_OR_expr()
+In logical_AND_expr()
+In inclusive_OR_expr()
+In exclusive_OR_expr()
+In AND_expr()
+In equality_expr()
+In relational_expr()
+In shift_expr()
+In additive_expr()
+In multiplicative_expr()
+In unary_expr()
+In primary()
+In atom()
+Peek: Token{ tok_type: INT_LITERAL, value: "0" }
+In literal()
+In primary loop
+In statement()
+Variable datatype: object { name: "Point" }
 Exprlist type: yet_to_infer
-Exprlist type: int64
+Exprlist type: yet_to_infer
+Variable datatype: object { name: "Point" }
+Exprlist type: yet_to_infer
+Exprlist type: yet_to_infer
 Literal expr type: int64
 Exprlist type: int64
-Codegen-Prototype: name:hell.newhell
-Codegen-Prototype: num_params:0
-Codegen-VariableExpr: PointerValue {
+Variable datatype: int32
+Exprlist type: int32
+Variable datatype: int32
+Exprlist type: yet_to_infer
+Exprlist type: yet_to_infer
+Variable datatype: object { name: "Point" }
+Literal expr type: float64
+Literal expr type: float64
+Exprlist type: object { name: "Point" }
+Variable datatype: object { name: "Point" }
+Exprlist type: yet_to_infer
+Variable datatype: object { name: "Point" }
+Exprlist type: float32
+Variable datatype: object { name: "Point" }
+Exprlist type: float64
+Variable datatype: object { name: "Point" }
+Exprlist type: yet_to_infer
+Variable datatype: object { name: "Point" }
+Variable datatype: object { name: "Point" }
+Binary expr :::: Lhs type: float32, Rhs type: float32
+Exprlist type: yet_to_infer
+Exprlist type: yet_to_infer
+Literal expr type: int64
+Exprlist type: int64
+Codegen-Prototype: name:Point.print
+Codegen-Prototype: num_params:1
+Codegen-FuncDef: Arg_name: "self", 
+Arg_Type: PointerType(
+    PointerType {
+        ptr_type: Type {
+            address: 0x000055e84fba6390,
+            llvm_type: "%Point*",
+        },
+    },
+),
+Alloca: PointerValue {
     ptr_value: Value {
-        name: "x",
-        address: 0x0000563ca7b1b870,
+        name: "self",
+        address: 0x000055e84fba8a80,
         is_const: false,
         is_null: false,
         is_undef: false,
-        llvm_value: "  %x = alloca i32, align 4",
-        llvm_type: "i32*",
+        llvm_value: "%Point* %self",
+        llvm_type: "%Point*",
     },
-}
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "x",
-        address: 0x0000563ca7b1b870,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %x = alloca i32, align 4",
-        llvm_type: "i32*",
-    },
-}
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "x",
-        address: 0x0000563ca7b1b870,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %x = alloca i32, align 4",
-        llvm_type: "i32*",
-    },
-}
-Codegen-IfStmt: Then_val: IntValue(
-    IntValue {
-        int_value: Value {
-            name: "integer.add_",
-            address: 0x0000563ca7b2c290,
+},
+Arg: PointerValue(
+    PointerValue {
+        ptr_value: Value {
+            name: "self",
+            address: 0x000055e84fba8a80,
             is_const: false,
             is_null: false,
             is_undef: false,
-            llvm_value: "  %integer.add_ = add i32 %x.load1, 1",
-            llvm_type: "i32",
+            llvm_value: "%Point* %self",
+            llvm_type: "%Point*",
         },
     },
 )
-Codegen-IfStmt: Else_val: IntValue(
-    IntValue {
-        int_value: Value {
-            name: "integer.add_3",
-            address: 0x0000563ca7b2e2a0,
+Codegen-FuncDef: VariableTable: {
+    "self": PointerValue {
+        ptr_value: Value {
+            name: "self",
+            address: 0x000055e84fba8a80,
             is_const: false,
             is_null: false,
             is_undef: false,
-            llvm_value: "  %integer.add_3 = add i32 %x.load2, 2",
-            llvm_type: "i32",
+            llvm_value: "%Point* %self",
+            llvm_type: "%Point*",
         },
     },
-)
-Codegen-IfStmt: Ok(
-    "  %ifphi = phi i32 [ %integer.add_, %then ], [ %integer.add_3, %else ]",
-)
-Codegen-Prototype: name:hello.new
-Codegen-Prototype: num_params:2
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "y2",
-        address: 0x0000563ca7b2a130,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %y2 = alloca i32, align 4",
-        llvm_type: "i32*",
-    },
 }
-Codegen-Prototype: name:hello.new2
-Codegen-Prototype: num_params:1
-Codegen-Prototype: name:hello.newhell
-Codegen-Prototype: num_params:1
-Codegen-Prototype: name:main2
-Codegen-Prototype: num_params:0
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba9750, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @printf32(float %Point.x)", llvm_type: "void" } })
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba27c0, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @println()", llvm_type: "void" } })
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba9a60, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @printf64(double %Point.y)", llvm_type: "void" } })
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba0ef0, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @println()", llvm_type: "void" } })
 Codegen-Prototype: name:main
 Codegen-Prototype: num_params:0
+Codegen-FuncDef: VariableTable: {}
+Codegen-Call_function: CallVal: Left(IntValue(IntValue { int_value: Value { name: "scani32", address: 0x55e84fba2260, is_const: false, is_null: false, is_undef: false, llvm_value: "  %scani32 = call i32 @scani32()", llvm_type: "i32" } }))
 Codegen-AssignmentExpr: lhs_ptr.is_ptr()=true
 Codegen-AssignmentExpr: TokenType::EQUAL
-Codegen-VarStmt: name: Token{ tok_type: IDENTIFIER, value: "x" }, datatype: Some(
-    Token{ tok_type: IDENTIFIER, value: "hello" },
-), init_value: Some(
-    StructExpr {
-        struct_name: Token{ tok_type: IDENTIFIER, value: "hello" },
-        fields: [
-            (
-                Token{ tok_type: IDENTIFIER, value: "x" },
-                Variable {
-                    name: Token{ tok_type: IDENTIFIER, value: "y" },
-                    datatype: int32,
-                    struct_name: None,
-                },
-            ),
-            (
-                Token{ tok_type: IDENTIFIER, value: "y" },
-                Variable {
-                    name: Token{ tok_type: IDENTIFIER, value: "z" },
-                    datatype: int32,
-                    struct_name: None,
-                },
-            ),
-        ],
-        datatype: object {
-            name: "hello",
-        },
+Codegen-VariableExpr: PointerValue {
+    ptr_value: Value {
+        name: "x",
+        address: 0x000055e84fbabb40,
+        is_const: false,
+        is_null: false,
+        is_undef: false,
+        llvm_value: "  %x = alloca i32, align 4",
+        llvm_type: "i32*",
     },
-)
+}
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fbb0f10, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @printi32(i32 %x.load)", llvm_type: "void" } })
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba1ee0, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @println()", llvm_type: "void" } })
 Codegen-ObjAssignExpr: LHS: PointerValue(
     PointerValue {
         ptr_value: Value {
-            name: "x",
-            address: 0x0000563ca7b0d5c0,
+            name: "p",
+            address: 0x000055e84fbb0e10,
             is_const: false,
             is_null: false,
             is_undef: false,
-            llvm_value: "  %x = alloca %hello, align 8",
-            llvm_type: "%hello*",
+            llvm_value: "  %p = alloca %Point, align 8",
+            llvm_type: "%Point*",
         },
     },
 )
 Codegen-ObjAssignExpr: StructDecl: [
     (
         Token{ tok_type: IDENTIFIER, value: "x" },
-        Token{ tok_type: K_INT32, value: "int32" },
+        Token{ tok_type: K_FLOAT32, value: "float32" },
     ),
     (
         Token{ tok_type: IDENTIFIER, value: "y" },
-        Token{ tok_type: K_INT32, value: "int32" },
+        Token{ tok_type: K_FLOAT64, value: "float64" },
     ),
 ]
 Codegen-ObjAssignExpr: Expr: StructExpr {
-    struct_name: Token{ tok_type: IDENTIFIER, value: "hello" },
+    struct_name: Token{ tok_type: IDENTIFIER, value: "Point" },
     fields: [
         (
             Token{ tok_type: IDENTIFIER, value: "x" },
-            Variable {
-                name: Token{ tok_type: IDENTIFIER, value: "y" },
-                datatype: int32,
-                struct_name: None,
+            Cast {
+                variable: Literal {
+                    value: Token{ tok_type: FLOAT_LITERAL, value: "20.2" },
+                    datatype: float64,
+                },
+                cast_type: Token{ tok_type: K_FLOAT32, value: "float32" },
+                from_dtype: float64,
+                to_dtype: float32,
             },
         ),
         (
             Token{ tok_type: IDENTIFIER, value: "y" },
-            Variable {
-                name: Token{ tok_type: IDENTIFIER, value: "z" },
-                datatype: int32,
-                struct_name: None,
+            Cast {
+                variable: Literal {
+                    value: Token{ tok_type: FLOAT_LITERAL, value: "20.5" },
+                    datatype: float64,
+                },
+                cast_type: Token{ tok_type: K_FLOAT64, value: "float64" },
+                from_dtype: float64,
+                to_dtype: float64,
             },
         ),
     ],
     datatype: object {
-        name: "hello",
+        name: "Point",
     },
 }
 Codegen-ObjAssignExpr: Fields: [
     (
         Token{ tok_type: IDENTIFIER, value: "x" },
-        Variable {
-            name: Token{ tok_type: IDENTIFIER, value: "y" },
-            datatype: int32,
-            struct_name: None,
+        Cast {
+            variable: Literal {
+                value: Token{ tok_type: FLOAT_LITERAL, value: "20.2" },
+                datatype: float64,
+            },
+            cast_type: Token{ tok_type: K_FLOAT32, value: "float32" },
+            from_dtype: float64,
+            to_dtype: float32,
         },
     ),
     (
         Token{ tok_type: IDENTIFIER, value: "y" },
-        Variable {
-            name: Token{ tok_type: IDENTIFIER, value: "z" },
-            datatype: int32,
-            struct_name: None,
+        Cast {
+            variable: Literal {
+                value: Token{ tok_type: FLOAT_LITERAL, value: "20.5" },
+                datatype: float64,
+            },
+            cast_type: Token{ tok_type: K_FLOAT64, value: "float64" },
+            from_dtype: float64,
+            to_dtype: float64,
         },
     ),
 ]
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "y",
-        address: 0x0000563ca7b24f60,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %y = alloca i32, align 4",
-        llvm_type: "i32*",
-    },
-}
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "z",
-        address: 0x0000563ca7b31b70,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %z = alloca i32, align 4",
-        llvm_type: "i32*",
-    },
-}
-Codegen-VarStmt: VarExpr: Variable {
-    name: Token{ tok_type: IDENTIFIER, value: "x" },
-    datatype: object {
-        name: "hello",
-    },
-    struct_name: Some(
-        "hello",
-    ),
-}
-Codegen-VarStmt: AssignmentExpr: Assignment {
-    target: Variable {
-        name: Token{ tok_type: IDENTIFIER, value: "x" },
-        datatype: object {
-            name: "hello",
-        },
-        struct_name: Some(
-            "hello",
-        ),
-    },
-    operator: Token{ tok_type: EQUAL, value: "=" },
-    expr: StructExpr {
-        struct_name: Token{ tok_type: IDENTIFIER, value: "hello" },
-        fields: [
-            (
-                Token{ tok_type: IDENTIFIER, value: "x" },
-                Variable {
-                    name: Token{ tok_type: IDENTIFIER, value: "y" },
-                    datatype: int32,
-                    struct_name: None,
-                },
-            ),
-            (
-                Token{ tok_type: IDENTIFIER, value: "y" },
-                Variable {
-                    name: Token{ tok_type: IDENTIFIER, value: "z" },
-                    datatype: int32,
-                    struct_name: None,
-                },
-            ),
-        ],
-        datatype: object {
-            name: "hello",
-        },
-    },
-    datatype: object {
-        name: "hello",
-    },
-}
-Codegen-VarStmt: Result: StructValue(
-    StructValue {
-        struct_value: Value {
-            name: "ptr.load",
-            address: 0x0000563ca7b31e50,
-            is_const: false,
-            is_null: false,
-            is_undef: false,
-            llvm_value: "  %ptr.load = load %hello, %hello* %x, align 4",
-            llvm_type: "%hello = type { i32, i32 }",
-        },
-    },
-)
-Codegen-AssignmentExpr: lhs_ptr.is_ptr()=true
-Codegen-AssignmentExpr: TokenType::EQUAL
 Symbol Table: IRSymbolTable {
     variable_table: {
-        "y": PointerValue {
-            ptr_value: Value {
-                name: "y",
-                address: 0x0000563ca7b24f60,
-                is_const: false,
-                is_null: false,
-                is_undef: false,
-                llvm_value: "  %y = alloca i32, align 4",
-                llvm_type: "i32*",
-            },
-        },
-        "z": PointerValue {
-            ptr_value: Value {
-                name: "z",
-                address: 0x0000563ca7b31b70,
-                is_const: false,
-                is_null: false,
-                is_undef: false,
-                llvm_value: "  %z = alloca i32, align 4",
-                llvm_type: "i32*",
-            },
-        },
         "x": PointerValue {
             ptr_value: Value {
                 name: "x",
-                address: 0x0000563ca7b0d5c0,
+                address: 0x000055e84fbabb40,
                 is_const: false,
                 is_null: false,
                 is_undef: false,
-                llvm_value: "  %x = alloca %hello, align 8",
-                llvm_type: "%hello*",
+                llvm_value: "  %x = alloca i32, align 4",
+                llvm_type: "i32*",
+            },
+        },
+        "p": PointerValue {
+            ptr_value: Value {
+                name: "p",
+                address: 0x000055e84fbb0e10,
+                is_const: false,
+                is_null: false,
+                is_undef: false,
+                llvm_value: "  %p = alloca %Point, align 8",
+                llvm_type: "%Point*",
             },
         },
     },
     struct_decls: {
-        "hello": StructDecl {
-            name: Token{ tok_type: IDENTIFIER, value: "hello" },
+        "Point": StructDecl {
+            name: Token{ tok_type: IDENTIFIER, value: "Point" },
             fields: [
                 (
                     Token{ tok_type: IDENTIFIER, value: "x" },
-                    Token{ tok_type: K_INT32, value: "int32" },
+                    Token{ tok_type: K_FLOAT32, value: "float32" },
                 ),
                 (
                     Token{ tok_type: IDENTIFIER, value: "y" },
-                    Token{ tok_type: K_INT32, value: "int32" },
+                    Token{ tok_type: K_FLOAT64, value: "float64" },
                 ),
             ],
         },
@@ -923,96 +949,161 @@ Symbol Table: IRSymbolTable {
     trait_decls: {},
     func_table: {},
 }
-Codegen-VariableExpr: PointerValue {
-    ptr_value: Value {
-        name: "y",
-        address: 0x0000563ca7b24f60,
-        is_const: false,
-        is_null: false,
-        is_undef: false,
-        llvm_value: "  %y = alloca i32, align 4",
-        llvm_type: "i32*",
+Codegen-Call_function: CallVal: Left(IntValue(IntValue { int_value: Value { name: "Point.print", address: 0x55e84fbaf3e0, is_const: false, is_null: false, is_undef: false, llvm_value: "  %Point.print = call i64 @Point.print(%Point* %p)", llvm_type: "i64" } }))
+Codegen-Call_function: CallVal: Left(FloatValue(FloatValue { float_value: Value { name: "scanf32", address: 0x55e84fba18a0, is_const: false, is_null: false, is_undef: false, llvm_value: "  %scanf32 = call float @scanf32()", llvm_type: "float" } }))
+Codegen-AssignmentExpr: lhs_ptr.is_ptr()=true
+Codegen-AssignmentExpr: TokenType::EQUAL
+Codegen-Call_function: CallVal: Left(FloatValue(FloatValue { float_value: Value { name: "scanf64", address: 0x55e84fba1520, is_const: false, is_null: false, is_undef: false, llvm_value: "  %scanf64 = call double @scanf64()", llvm_type: "double" } }))
+Codegen-AssignmentExpr: lhs_ptr.is_ptr()=true
+Codegen-AssignmentExpr: TokenType::EQUAL
+Symbol Table: IRSymbolTable {
+    variable_table: {
+        "x": PointerValue {
+            ptr_value: Value {
+                name: "x",
+                address: 0x000055e84fbabb40,
+                is_const: false,
+                is_null: false,
+                is_undef: false,
+                llvm_value: "  %x = alloca i32, align 4",
+                llvm_type: "i32*",
+            },
+        },
+        "p": PointerValue {
+            ptr_value: Value {
+                name: "p",
+                address: 0x000055e84fbb0e10,
+                is_const: false,
+                is_null: false,
+                is_undef: false,
+                llvm_value: "  %p = alloca %Point, align 8",
+                llvm_type: "%Point*",
+            },
+        },
     },
+    struct_decls: {
+        "Point": StructDecl {
+            name: Token{ tok_type: IDENTIFIER, value: "Point" },
+            fields: [
+                (
+                    Token{ tok_type: IDENTIFIER, value: "x" },
+                    Token{ tok_type: K_FLOAT32, value: "float32" },
+                ),
+                (
+                    Token{ tok_type: IDENTIFIER, value: "y" },
+                    Token{ tok_type: K_FLOAT64, value: "float64" },
+                ),
+            ],
+        },
+    },
+    impl_decls: {},
+    trait_decls: {},
+    func_table: {},
 }
+Codegen-Call_function: CallVal: Left(IntValue(IntValue { int_value: Value { name: "Point.print2", address: 0x55e84fbae670, is_const: false, is_null: false, is_undef: false, llvm_value: "  %Point.print2 = call i64 @Point.print(%Point* %p)", llvm_type: "i64" } }))
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fbae210, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @printf32(float %floating.add_)", llvm_type: "void" } })
+Codegen-Call_function: CallVal: Right(InstructionValue { instruction_value: Value { name: "", address: 0x55e84fba0fa0, is_const: false, is_null: false, is_undef: false, llvm_value: "  call void @println()", llvm_type: "void" } })
 =======================LLVM IR=======================
 ; ModuleID = 'main_mod'
 source_filename = "main_mod"
 
-%hello = type { i32, i32 }
+%Point = type { float, double }
 
-define i32 @hell.newhell() {
+declare void @printi8(i8)
+
+declare void @printi16(i16)
+
+declare void @printi32(i32)
+
+declare void @printi64(i64)
+
+declare void @printu8(i8)
+
+declare void @printu16(i16)
+
+declare void @printu32(i32)
+
+declare void @printu64(i64)
+
+declare void @printf32(float)
+
+declare void @printf64(double)
+
+declare void @printbool(i1)
+
+declare i8 @scani8()
+
+declare i16 @scani16()
+
+declare i32 @scani32()
+
+declare i64 @scani64()
+
+declare i8 @scanu8()
+
+declare i16 @scanu16()
+
+declare i32 @scanu32()
+
+declare i64 @scanu64()
+
+declare float @scanf32()
+
+declare double @scanf64()
+
+declare i1 @scanbool()
+
+declare void @println()
+
+define i64 @Point.print(%Point* %self) {
 entry:
-  %x = alloca i32, align 4
-  %x.load = load i32, i32* %x, align 4
-  %integer.unsigned.eqeq_ = icmp eq i32 %x.load, 1
-  br i1 %integer.unsigned.eqeq_, label %then, label %else
-
-then:                                             ; preds = %entry
-  %x.load1 = load i32, i32* %x, align 4
-  %integer.add_ = add i32 %x.load1, 1
-  br label %ifcont
-
-else:                                             ; preds = %entry
-  %x.load2 = load i32, i32* %x, align 4
-  %integer.add_3 = add i32 %x.load2, 2
-  br label %ifcont
-
-ifcont:                                           ; preds = %else, %then
-  %ifphi = phi i32 [ %integer.add_, %then ], [ %integer.add_3, %else ]
-  ret i32 %ifphi
-}
-
-define i32 @hello.new(%hello* %self, i32 %y) {
-entry:
-  %y2 = alloca i32, align 4
-  %self1 = alloca %hello*, align 8
-  store %hello* %self, %hello** %self1, align 8
-  store i32 %y, i32* %y2, align 4
-  %y.load = load i32, i32* %y2, align 4
-  ret i32 %y.load
-}
-
-define i32 @hello.new2(%hello* %self) {
-entry:
-  %self1 = alloca %hello*, align 8
-  store %hello* %self, %hello** %self1, align 8
-  ret i32 10
-}
-
-define i32 @hello.newhell(%hello* %self) {
-entry:
-  %self1 = alloca %hello*, align 8
-  store %hello* %self, %hello** %self1, align 8
-  ret i32 20
-}
-
-define i64 @main2() {
-entry:
-  ret i64 10
+  %Point.x..ptr = getelementptr inbounds %Point, %Point* %self, i32 0, i32 0
+  %Point.x = load float, float* %Point.x..ptr, align 4
+  call void @printf32(float %Point.x)
+  call void @println()
+  %Point.y..ptr = getelementptr inbounds %Point, %Point* %self, i32 0, i32 1
+  %Point.y = load double, double* %Point.y..ptr, align 8
+  call void @printf64(double %Point.y)
+  call void @println()
+  ret i64 0
 }
 
 define i64 @main() {
 entry:
-  %y = alloca i32, align 4
-  %z = alloca i32, align 4
-  store i32 10, i32* %y, align 4
-  %x = alloca %hello, align 8
-  %x1 = getelementptr inbounds %hello, %hello* %x, i32 0, i32 0
-  %y.load = load i32, i32* %y, align 4
-  store i32 %y.load, i32* %x1, align 4
-  %y2 = getelementptr inbounds %hello, %hello* %x, i32 0, i32 1
-  %z.load = load i32, i32* %z, align 4
-  store i32 %z.load, i32* %y2, align 4
-  %ptr.load = load %hello, %hello* %x, align 4
-  %hello.x..ptr = getelementptr inbounds %hello, %hello* %x, i32 0, i32 0
-  store i32 10, i32* %hello.x..ptr, align 4
-  %y.load3 = load i32, i32* %y, align 4
-  %hello.new..call = call i32 @hello.new(%hello* %x, i32 %y.load3)
-  %main2..call = call i64 @main2()
-  ret i64 10
+  %x = alloca i32, align 4
+  %p = alloca %Point, align 8
+  %scani32 = call i32 @scani32()
+  store i32 %scani32, i32* %x, align 4
+  %x.load = load i32, i32* %x, align 4
+  call void @printi32(i32 %x.load)
+  call void @println()
+  %x1 = getelementptr inbounds %Point, %Point* %p, i32 0, i32 0
+  store float 0x4034333340000000, float* %x1, align 4
+  %y = getelementptr inbounds %Point, %Point* %p, i32 0, i32 1
+  store double 2.050000e+01, double* %y, align 8
+  %ptr.load = load %Point, %Point* %p, align 8
+  %Point.print = call i64 @Point.print(%Point* %p)
+  %Point.x..ptr = getelementptr inbounds %Point, %Point* %p, i32 0, i32 0
+  %scanf32 = call float @scanf32()
+  store float %scanf32, float* %Point.x..ptr, align 4
+  %Point.y..ptr = getelementptr inbounds %Point, %Point* %p, i32 0, i32 1
+  %scanf64 = call double @scanf64()
+  store double %scanf64, double* %Point.y..ptr, align 8
+  %Point.print2 = call i64 @Point.print(%Point* %p)
+  %Point.x..ptr3 = getelementptr inbounds %Point, %Point* %p, i32 0, i32 0
+  %Point.x = load float, float* %Point.x..ptr3, align 4
+  %Point.y..ptr4 = getelementptr inbounds %Point, %Point* %p, i32 0, i32 1
+  %Point.y = load double, double* %Point.y..ptr4, align 8
+  %cast.float64_to_float32_ = fptrunc double %Point.y to float
+  %floating.add_ = fadd float %Point.x, %cast.float64_to_float32_
+  call void @printf32(float %floating.add_)
+  call void @println()
+  ret i64 0
 }
 
 =====================================================
 Ok(
     (),
 )
+Currnet Directory: Ok("/home/rahul/baasha/baasha")
+Status: exit status: 0
